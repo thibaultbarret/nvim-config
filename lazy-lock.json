@@ -1,6 +1,6 @@
 {
   "Comment.nvim": { "branch": "master", "commit": "e30b7f2008e52442154b66f7c519bfd2f1e32acb" },
-  "LuaSnip": { "branch": "master", "commit": "3d5bced1b9ae69fa3f9b1942e28af5dbc537f946" },
+  "LuaSnip": { "branch": "master", "commit": "458560534a73f7f8d7a11a146c801db00b081df0" },
   "bufferline.nvim": { "branch": "main", "commit": "655133c3b4c3e5e05ec549b9f8cc2894ac6f51b3" },
   "catppuccin": { "branch": "main", "commit": "e762a47478377612e59f01aa51db961f605c9aa4" },
   "cmp-buffer": { "branch": "main", "commit": "b74fab3656eea9de20a9b8116afa3cfc4ec09657" },
@@ -32,5 +32,6 @@
   "telescope.nvim": { "branch": "master", "commit": "a0bbec21143c7bc5f8bb02e0005fa0b982edc026" },
   "vim-illuminate": { "branch": "master", "commit": "0d1e93684da00ab7c057410fecfc24f434698898" },
   "vim-move": { "branch": "master", "commit": "3c4195de0748da9bba25c54d78d959d349e93c55" },
-  "vimtex": { "branch": "master", "commit": "7f2633027c8f496a85284de0c11aa32f1e07e049" }
+  "vimtex": { "branch": "master", "commit": "7f2633027c8f496a85284de0c11aa32f1e07e049" },
+  "which-key.nvim": { "branch": "main", "commit": "370ec46f710e058c9c1646273e6b225acf47cbed" }
 }
