@@ -46,7 +46,10 @@ return {
                 dotfiles = false,
                 git_clean = false,
                 -- no_buffer = false,
-                custom = { "^.git$" },
+                custom = { "^.git$",
+                    ".DS_Store",
+                    "__pycache__"
+                },
             },
 
         })
