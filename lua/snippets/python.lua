@@ -18,8 +18,10 @@ end
 
 return {
     s("header", {
+        t('# -*- coding: utf-8 -*-'),
+        t({ "", "" }),
         t('"""'),
-        t({ "", "" }), -- nouvelle ligne
+        t({ "", "" }),
         f(get_filename),
         t({ "", "", "Description : ", "    " }),
         i(1, "Description du fichier"),
