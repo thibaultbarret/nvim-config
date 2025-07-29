@@ -10,6 +10,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
 		map("gl", vim.diagnostic.open_float, "Open Diagnostic Float")
 		map("K", vim.lsp.buf.hover, "Hover Documentation")
 		map("gs", vim.lsp.buf.signature_help, "Signature Documentation")
+		map("gd", vim.lsp.buf.definition, "Goto Definition")
 		map("gD", vim.lsp.buf.declaration, "Goto Declaration")
 		map("<leader>la", vim.lsp.buf.code_action, "Code Action")
 		map("<leader>lr", vim.lsp.buf.rename, "Rename all references")
@@ -56,16 +57,49 @@ vim.api.nvim_create_autocmd("LspAttach", {
 	end,
 })
 
+-- Fonction pour obtenir l'icône selon la source du diagnostic (pour virtual text seulement)
+local function get_source_icon(diagnostic)
+	local source = diagnostic.source or ""
+
+	if source:lower():find("ruff") then
+		return "⚡"
+	elseif source:lower():find("pyright") then
+		return "🐍"
+	else
+		return "" -- Pas d'icône spéciale pour les autres sources
+	end
+end
+
 vim.diagnostic.config({
 	virtual_lines = false,
-	virtual_text = true,
-	-- underline = false,
+	virtual_text = {
+		-- Personnalise seulement le virtual text avec les icônes de source
+		prefix = function(diagnostic)
+			local source_icon = get_source_icon(diagnostic)
+			if source_icon ~= "" then
+				return source_icon .. " "
+			else
+				return "● " -- Puce standard pour les autres sources
+			end
+		end,
+	},
 	update_in_insert = false,
 	severity_sort = true,
 	float = {
 		border = "rounded",
 		source = true,
+		-- Affiche aussi la source dans les popups
+		prefix = function(diagnostic)
+			local source_icon = get_source_icon(diagnostic)
+			local source = diagnostic.source or "Unknown"
+			if source_icon ~= "" then
+				return source_icon .. " [" .. source .. "] ", "DiagnosticFloatingPrefix"
+			else
+				return "[" .. source .. "] ", "DiagnosticFloatingPrefix"
+			end
+		end,
 	},
+	-- Garde les signes standards dans la colonne (pour voir le type de diagnostic)
 	signs = {
 		text = {
 			[vim.diagnostic.severity.ERROR] = "󰅚 ",
@@ -79,3 +113,29 @@ vim.diagnostic.config({
 		},
 	},
 })
+
+-- Commande pour débugger les diagnostics
+vim.api.nvim_create_user_command("DiagnosticDebug", function()
+	local bufnr = vim.api.nvim_get_current_buf()
+	local diagnostics = vim.diagnostic.get(bufnr)
+
+	print("=== Diagnostics Debug ===")
+	print("Buffer:", bufnr)
+	print("Total diagnostics:", #diagnostics)
+
+	for i, diagnostic in ipairs(diagnostics) do
+		local source_icon = get_source_icon(diagnostic)
+		local severity_name = vim.diagnostic.severity[diagnostic.severity]
+		print(
+			string.format(
+				"[%d] Line %d: %s %s %s (source: %s)",
+				i,
+				diagnostic.lnum + 1,
+				severity_name,
+				source_icon ~= "" and source_icon or "●",
+				diagnostic.message:sub(1, 50),
+				diagnostic.source or "unknown"
+			)
+		)
+	end
+end, { desc = "Debug diagnostic information" })
