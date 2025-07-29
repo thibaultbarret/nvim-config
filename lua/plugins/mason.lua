@@ -1,7 +1,7 @@
 return {
     "williamboman/mason.nvim",
     cmd = "Mason",
-    envent = "BufReadPre",
+    event = "BufReadPre",
     config = {
         ui = {
             icons = {

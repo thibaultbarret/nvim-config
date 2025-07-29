@@ -4,6 +4,7 @@ return {
         "hrsh7th/cmp-nvim-lsp",
         "hrsh7th/cmp-buffer",
         "hrsh7th/cmp-path",
+        "hrsh7th/cmp-cmdLine",
         {
             "L3MON4D3/LuaSnip",
             version = "v2.*",
@@ -15,7 +16,7 @@ return {
         "saadparwaiz1/cmp_luasnip",
     },
 
-    event = "InsertEnter",
+    event = { "InsertEnter", "CmdlineEnter" },
 
     config = function()
         local cmp = require('cmp')
@@ -35,12 +36,17 @@ return {
             ext_opts = {
                 [types.choiceNode] = {
                     active = {
-                        virt_text = { { " <- Choix actuel", "Comment" } },
+                        virt_text = { { " <- Choix actuel ", "Comment" } },
+                        -- Optionnel: surligner le choix actuel
+                        hl_group = "Visual",
+                    },
+                    passive = {
+                        virt_text = { { " (choix disponible)", "Comment" } },
                     },
                 },
                 [types.insertNode] = {
                     active = {
-                        virt_text = { { " <- ", "NonTest" } },
+                        virt_text = { { " <- Tapez ici", "NonTest" } },
                     },
                 },
             },
@@ -54,7 +60,7 @@ return {
 
         cmp.setup({
             completion = {
-                completeopt = "menu,menuone, noinsert",
+                completeopt = "menu,menuone,noinsert",
             },
             snippet = {
                 expand = function(args)
@@ -91,9 +97,25 @@ return {
                         fallback()
                     end
                 end, { "i", "s" }),
+                -- Mappings spécifiques pour les choice_node
+                ["<C-n>"] = cmp.mapping(function(fallback)
+                    if luasnip.choice_active() then
+                        luasnip.change_choice(1) -- Choix suivant
+                    else
+                        fallback()
+                    end
+                end, { "i", "s" }),
+
+                ["<C-p>"] = cmp.mapping(function(fallback)
+                    if luasnip.choice_active() then
+                        luasnip.change_choice(-1) -- Choix précédent
+                    else
+                        fallback()
+                    end
+                end, { "i", "s" }),
             }),
             sources = cmp.config.sources({
-                { name = 'luasnip' },
+                { name = 'luasnip', option = { show_autosnippets = true } },
                 { name = 'nvim_lsp' },
             }, {
                 { name = 'buffer' },
@@ -148,16 +170,19 @@ return {
                     -- Icône selon le type
                     vim_item.kind = string.format('%s %s', kind_icons[vim_item.kind] or "", vim_item.kind)
 
-                    -- Source du menu avec couleur pour distinguer
-                    local source_names = {
-                        luasnip = "[Snip]",
-                        nvim_lsp = "[LSP]",
-                        buffer = "[Buf]",
-                        path = "[Path]",
-                    }
-                    vim_item.menu = source_names[entry.source.name] or "[?]"
+                    if entry.completion_item.detail then
+                        vim_item.menu = entry.completion_item.detail
+                    else
+                        local source_names = {
+                            luasnip = "[Snip]",
+                            nvim_lsp = "[LSP]",
+                            buffer = "[Buf]",
+                            path = "[Path]",
+                        }
+                        vim_item.menu = source_names[entry.source.name] or "[?]"
+                    end
 
-                    -- Limiter la longueur pour éviter les débordements
+                    -- Limiter la longueur
                     if string.len(vim_item.abbr) > 50 then
                         vim_item.abbr = string.sub(vim_item.abbr, 1, 47) .. "..."
                     end
@@ -174,6 +199,10 @@ return {
                 confirm_resolve_timeout = 80,
                 async_budget = 1,
                 max_view_entries = 200,
+            },
+            window = {
+                completion = cmp.config.window.bordered(),
+                documentation = cmp.config.window.bordered(),
             },
         })
     end,

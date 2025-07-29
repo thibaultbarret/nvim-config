@@ -1,0 +1,6 @@
+@DSL Model;
+@Behaviour NomDuComportement;
+@Author Thibault Barret;
+@Date 27/07/2025;
+@Description{Description du comportement};
+

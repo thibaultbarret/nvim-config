@@ -149,63 +149,63 @@ return {
         end, { desc = "Toggle linting on/off" })
 
         -- Configuration des diagnostics pour une meilleure intégration
-        -- vim.diagnostic.config({
-        --     virtual_text = {
-        --         enabled = true,
-        --         source = "if_many",
-        --         prefix = "●",
-        --         spacing = 2,
-        --         severity = {
-        --             min = vim.diagnostic.severity.HINT,
-        --         },
-        --     },
-        --     signs = {
-        --         text = {
-        --             [vim.diagnostic.severity.ERROR] = "",
-        --             [vim.diagnostic.severity.WARN] = "",
-        --             [vim.diagnostic.severity.INFO] = "",
-        --             [vim.diagnostic.severity.HINT] = "󰌵",
-        --         },
-        --     },
-        --     underline = true,
-        --     update_in_insert = false,
-        --     severity_sort = true,
-        --     float = {
-        --         focusable = false,
-        --         style = "minimal",
-        --         border = "rounded",
-        --         source = "always",
-        --         header = "",
-        --         prefix = "",
-        --     },
-        -- })
-        --
-        -- -- Fonction utilitaire pour afficher les erreurs dans une popup
-        -- vim.keymap.set("n", "<leader>le", function()
-        --     local diagnostics = vim.diagnostic.get(0)
-        --     if #diagnostics == 0 then
-        --         print("No diagnostics found")
-        --         return
-        --     end
-        --
-        --     local lines = {}
-        --     for _, diagnostic in ipairs(diagnostics) do
-        --         local severity = vim.diagnostic.severity[diagnostic.severity]
-        --         table.insert(lines, string.format("[%s] Line %d: %s", severity, diagnostic.lnum + 1, diagnostic.message))
-        --     end
-        --
-        --     -- Ouvre une popup avec les erreurs
-        --     local buf = vim.api.nvim_create_buf(false, true)
-        --     vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-        --     vim.api.nvim_open_win(buf, true, {
-        --         relative = "cursor",
-        --         width = math.max(50, math.min(80, vim.o.columns - 10)),
-        --         height = math.min(#lines, 15),
-        --         row = 1,
-        --         col = 0,
-        --         border = "rounded",
-        --         title = " Diagnostics ",
-        --     })
-        -- end, { desc = "Show all diagnostics in popup" })
+        vim.diagnostic.config({
+            virtual_text = {
+                enabled = true,
+                source = "if_many",
+                prefix = "●",
+                spacing = 2,
+                severity = {
+                    min = vim.diagnostic.severity.HINT,
+                },
+            },
+            signs = {
+                text = {
+                    [vim.diagnostic.severity.ERROR] = "",
+                    [vim.diagnostic.severity.WARN] = "",
+                    [vim.diagnostic.severity.INFO] = "",
+                    [vim.diagnostic.severity.HINT] = "󰌵",
+                },
+            },
+            underline = true,
+            update_in_insert = false,
+            severity_sort = true,
+            float = {
+                focusable = false,
+                style = "minimal",
+                border = "rounded",
+                source = "always",
+                header = "",
+                prefix = "",
+            },
+        })
+
+        -- Fonction utilitaire pour afficher les erreurs dans une popup
+        vim.keymap.set("n", "<leader>le", function()
+            local diagnostics = vim.diagnostic.get(0)
+            if #diagnostics == 0 then
+                print("No diagnostics found")
+                return
+            end
+
+            local lines = {}
+            for _, diagnostic in ipairs(diagnostics) do
+                local severity = vim.diagnostic.severity[diagnostic.severity]
+                table.insert(lines, string.format("[%s] Line %d: %s", severity, diagnostic.lnum + 1, diagnostic.message))
+            end
+
+            -- Ouvre une popup avec les erreurs
+            local buf = vim.api.nvim_create_buf(false, true)
+            vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+            vim.api.nvim_open_win(buf, true, {
+                relative = "cursor",
+                width = math.max(50, math.min(80, vim.o.columns - 10)),
+                height = math.min(#lines, 15),
+                row = 1,
+                col = 0,
+                border = "rounded",
+                title = " Diagnostics ",
+            })
+        end, { desc = "Show all diagnostics in popup" })
     end,
 }

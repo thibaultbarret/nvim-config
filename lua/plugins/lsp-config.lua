@@ -66,40 +66,45 @@ return {
                     end
 
                     -- Publie les diagnostics filtrés
-                    vim.lsp.diagnostic.on_publish_diagnostics(err, result, ctx, config)
+                    vim.lsp.handlers["textDocument/publishDiagnostics"](err, result, ctx, config)
                 end,
             },
             settings = {
                 pyright = {
                     disableOrganizeImports = true,
                 },
-                analysis = {
-                    autoSearchPaths = true,
-                    diagnosticMode = "workspace", -- ou "openFilesOnly"
-                    useLibraryCodeForTypes = true,
-                    typeCheckingMode = "basic",   -- ou "strict"
-                    diagnosticSeverityOverrides = {
+                python = {
+                    analysis = {
+                        autoSearchPaths = true,
+                        diagnosticMode = "workspace",  -- ou "openFilesOnly"
+                        useLibraryCodeForTypes = true,
+                        typeCheckingMode = "basic",    -- ou "strict"
+                        autoImportCompletions = true,
+                        completeFunctionParens = true, -- Ajoute automatiquement les parenthèses
+                        includePackageImportsInAutoImports = true,
                         diagnosticSeverityOverrides = {
-                            reportUnusedImport = "none",
-                            reportUnusedVariable = "none",
-                            reportUnusedFunction = "none",
-                            reportUnusedClass = "none",
-                            reportMissingImports = "none",
-                            reportWildcardImportFromLibrary = "none",
+                            diagnosticSeverityOverrides = {
+                                reportUnusedImport = "none",
+                                reportUnusedVariable = "none",
+                                reportUnusedFunction = "none",
+                                reportUnusedClass = "none",
+                                reportMissingImports = "none",
+                                reportWildcardImportFromLibrary = "none",
 
-                            -- Garde les vrais diagnostics de types
-                            reportGeneralTypeIssues = "error",
-                            reportOptionalMemberAccess = "error",
-                            reportOptionalSubscript = "error",
-                            reportOptionalOperand = "error",
-                            reportAttributeAccessIssue = "error",
-                            reportArgumentType = "error",
-                            reportAssignmentType = "error",
-                            reportReturnType = "error",
+                                -- Garde les vrais diagnostics de types
+                                reportGeneralTypeIssues = "error",
+                                reportOptionalMemberAccess = "error",
+                                reportOptionalSubscript = "error",
+                                reportOptionalOperand = "error",
+                                reportAttributeAccessIssue = "error",
+                                reportArgumentType = "error",
+                                reportAssignmentType = "error",
+                                reportReturnType = "error",
+                            },
                         },
-                    },
+                    }
                 }
-            }
+            },
         })
 
         vim.diagnostic.config({

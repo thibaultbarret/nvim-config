@@ -1,0 +1,160 @@
+return {
+    "neovim/nvim-lspconfig",
+    dependencies = { "williamboman/mason-lspconfig.nvim" },
+    config = function()
+        local lspconfig = require('lspconfig')
+
+        -- === CAPACITÉS UNIFIÉES POUR ÉVITER LES CONFLITS ===
+        local capabilities = require('cmp_nvim_lsp').default_capabilities()
+
+        -- IMPORTANT : Force l'encodage UTF-8 pour éviter les conflits
+        capabilities.general = capabilities.general or {}
+        capabilities.general.positionEncodings = { "utf-8" }
+
+        -- === FONCTION ON_ATTACH UNIQUE ===
+        local on_attach = function(client, bufnr)
+            local opts = { buffer = bufnr, silent = true }
+
+            -- Force l'encodage pour ce client
+            if client.server_capabilities then
+                client.server_capabilities.positionEncoding = "utf-8"
+            end
+
+            -- Keymaps LSP
+            vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
+            vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
+            vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, opts)
+            vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
+            vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, opts)
+            vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, opts)
+
+            -- Signature help
+            vim.keymap.set({ 'n', 'i' }, '<C-s>', vim.lsp.buf.signature_help, opts)
+
+            -- Format (seulement pour Pyright, pas pour Ruff)
+            if client.name == "pyright" then
+                vim.keymap.set('n', '<leader>f', function()
+                    vim.lsp.buf.format({ async = true })
+                end, opts)
+            end
+
+            -- Auto-trigger signature help
+            vim.api.nvim_create_autocmd("CursorHoldI", {
+                buffer = bufnr,
+                callback = function()
+                    local line = vim.api.nvim_get_current_line()
+                    local col = vim.api.nvim_win_get_cursor(0)[2]
+                    if col > 0 and (line:sub(col, col) == "(" or line:sub(col, col) == ",") then
+                        vim.defer_fn(function()
+                            vim.lsp.buf.signature_help()
+                        end, 200)
+                    end
+                end,
+            })
+        end
+
+        -- === CONFIGURATION PYRIGHT UNIQUE ===
+        -- S'assurer qu'il n'y a qu'UNE seule configuration
+        lspconfig.pyright.setup({
+            on_attach = on_attach,
+            capabilities = capabilities,
+
+            -- Configuration pour éviter les conflits
+            single_file_support = true,
+
+            settings = {
+                pyright = {
+                    disableOrganizeImports = true,
+                },
+                python = {
+                    analysis = {
+                        -- Configuration de base
+                        autoSearchPaths = true,
+                        useLibraryCodeForTypes = true,
+                        diagnosticMode = "workspace", -- Unifié
+                        typeCheckingMode = "basic",
+
+                        -- IMPORTANT : Paramètres pour l'autocomplétion
+                        autoImportCompletions = true,
+                        completeFunctionParens = true,
+                        includePackageImportsInAutoImports = true,
+
+                        -- Désactive ce que Ruff gère
+                        diagnosticSeverityOverrides = {
+                            reportUnusedImport = "none",
+                            reportUnusedVariable = "none",
+                            reportUnusedFunction = "none",
+                            reportUnusedClass = "none",
+                            reportMissingImports = "none",
+                            reportWildcardImportFromLibrary = "none",
+
+                            -- Garde les diagnostics de type
+                            reportGeneralTypeIssues = "error",
+                            reportOptionalMemberAccess = "warning",
+                            reportOptionalSubscript = "warning",
+                            reportOptionalOperand = "warning",
+                            reportAttributeAccessIssue = "error",
+                            reportArgumentType = "error",
+                            reportAssignmentType = "error",
+                            reportReturnType = "error",
+                        },
+                    }
+                }
+            }
+        })
+
+        -- === NE PAS CONFIGURER RUFF COMME LSP ===
+        -- Ruff sera géré par nvim-lint uniquement
+
+        -- === CONFIGURATION DES DIAGNOSTICS ===
+        vim.diagnostic.config({
+            virtual_text = {
+                enabled = true,
+                source = "if_many",
+                prefix = function(diagnostic)
+                    if diagnostic.source == "Pyright" then
+                        return "🔍"
+                    elseif diagnostic.source == "Ruff" then
+                        return "⚡"
+                    else
+                        return "●"
+                    end
+                end,
+                spacing = 2,
+            },
+            signs = {
+                text = {
+                    [vim.diagnostic.severity.ERROR] = "",
+                    [vim.diagnostic.severity.WARN] = "",
+                    [vim.diagnostic.severity.INFO] = "",
+                    [vim.diagnostic.severity.HINT] = "󰌵",
+                },
+            },
+            underline = true,
+            update_in_insert = false,
+            severity_sort = true,
+            float = {
+                focusable = false,
+                style = "minimal",
+                border = "rounded",
+                source = "always",
+                header = "",
+                prefix = "",
+                -- IMPORTANT : Dimensions pour signature help
+                max_width = 80,
+                max_height = 20,
+            },
+        })
+
+        -- === HANDLER SIGNATURE HELP AMÉLIORÉ ===
+        vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(
+            vim.lsp.handlers.signature_help, {
+                border = "rounded",
+                focusable = false,
+                max_width = 80,
+                max_height = 25,
+                close_events = { "CursorMoved", "BufHidden", "InsertCharPre" },
+            }
+        )
+    end,
+}
