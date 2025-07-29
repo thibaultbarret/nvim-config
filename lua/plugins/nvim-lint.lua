@@ -21,20 +21,20 @@ return {
             '--select',
             -- Sélectionne les règles que Ruff doit gérer
             table.concat({
-                'E',   -- pycodestyle errors
-                'W',   -- pycodestyle warnings
-                'F',   -- pyflakes (imports non utilisés, variables non utilisées, etc.)
-                'I',   -- isort (ordre des imports)
-                'N',   -- pep8-naming
-                'UP',  -- pyupgrade
-                'B',   -- flake8-bugbear
-                'S',   -- flake8-bandit
-                'C4',  -- flake8-comprehensions
+                'E', -- pycodestyle errors
+                'W', -- pycodestyle warnings
+                'F', -- pyflakes (imports non utilisés, variables non utilisées, etc.)
+                'I', -- isort (ordre des imports)
+                'N', -- pep8-naming
+                'UP', -- pyupgrade
+                'B', -- flake8-bugbear
+                'S', -- flake8-bandit
+                'C4', -- flake8-comprehensions
                 'SIM', -- flake8-simplify
                 'ARG', -- flake8-unused-arguments
                 'PTH', -- flake8-use-pathlib
                 'ERA', -- eradicate (code commenté)
-                'PL',  -- pylint
+                'PL', -- pylint
                 'RUF', -- ruff-specific rules
             }, ','),
 
@@ -148,37 +148,6 @@ return {
             end
         end, { desc = "Toggle linting on/off" })
 
-        -- Configuration des diagnostics pour une meilleure intégration
-        vim.diagnostic.config({
-            virtual_text = {
-                enabled = true,
-                source = "if_many",
-                prefix = "●",
-                spacing = 2,
-                severity = {
-                    min = vim.diagnostic.severity.HINT,
-                },
-            },
-            signs = {
-                text = {
-                    [vim.diagnostic.severity.ERROR] = "",
-                    [vim.diagnostic.severity.WARN] = "",
-                    [vim.diagnostic.severity.INFO] = "",
-                    [vim.diagnostic.severity.HINT] = "󰌵",
-                },
-            },
-            underline = true,
-            update_in_insert = false,
-            severity_sort = true,
-            float = {
-                focusable = false,
-                style = "minimal",
-                border = "rounded",
-                source = "always",
-                header = "",
-                prefix = "",
-            },
-        })
 
         -- Fonction utilitaire pour afficher les erreurs dans une popup
         vim.keymap.set("n", "<leader>le", function()

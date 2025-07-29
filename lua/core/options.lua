@@ -32,3 +32,5 @@ opt.undofile = true
 -- Caracteres speciaux
 opt.list = true
 opt.listchars:append({ nbsp = "␣", trail = "•", precedes = "«", extends = "»", tab = "> " })
+
+opt.winborder = "rounded"
