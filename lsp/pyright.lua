@@ -1,6 +1,13 @@
 return {
 	cmd = { "pyright-langserver", "--stdio" },
 	filetypes = { "python" },
+	root_markers = {
+		"pyproject.toml",
+		"pyrightconfig.json",
+		"setup.py",
+		"requirements.txt",
+		".git",
+	},
 	settings = {
 		pyright = {
 			-- Désactive l'organisation des imports (Ruff s'en charge)
@@ -15,11 +22,7 @@ return {
 				-- Recherche automatique des chemins Python
 				autoSearchPaths = true,
 
-				-- OPTIMISATION PERFORMANCE : Mode de diagnostic
-				-- "openFilesOnly" = plus rapide, "workspace" = plus complet
-				diagnosticMode = vim.fn.isdirectory(vim.fn.getcwd() .. "/.git") and vim.fn
-					.system("find " .. vim.fn.getcwd() .. " -name '*.py' | wc -l")
-					:match("%d+") + 0 > 100 and "openFilesOnly" or "workspace",
+				diagnosticMode = "workspace",
 				--
 				-- Utilise les types des bibliothèques installées
 				useLibraryCodeForTypes = true,

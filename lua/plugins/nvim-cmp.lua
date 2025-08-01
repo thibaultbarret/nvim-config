@@ -4,6 +4,7 @@ return {
 		"hrsh7th/cmp-nvim-lsp",
 		"hrsh7th/cmp-buffer",
 		"hrsh7th/cmp-path",
+		-- "hrsh7th/cmp-nvim-lsp-signature-help",
 		"hrsh7th/cmp-cmdLine",
 		{
 			"L3MON4D3/LuaSnip",
@@ -115,11 +116,11 @@ return {
 				end, { "i", "s" }),
 			}),
 			sources = cmp.config.sources({
-				{ name = "luasnip", option = { show_autosnippets = true } },
-				{ name = "nvim_lsp" },
-			}, {
-				{ name = "buffer" },
-				{ name = "path" },
+				{ name = "nvim_lsp", priority = 1000 },
+				{ name = "luasnip", prority = 900, option = { show_autosnippets = true } },
+				-- { name = "nvim_lsp_signature_help" },
+				{ name = "buffer", priority = 500 },
+				{ name = "path", priority = 200 },
 			}),
 			-- Configuration pour éviter les doublons
 			experimental = {
@@ -136,7 +137,7 @@ return {
 
 			-- Formatage des items dans le menu
 			formatting = {
-				fields = { "kind", "abbr", "menu" }, -- Ordre d'affichage
+				fields = { "abbr", "kind", "menu" }, -- Ordre d'affichage
 				format = function(entry, vim_item)
 					-- Ajouter des icônes pour identifier les sources
 					local kind_icons = {
@@ -176,6 +177,7 @@ return {
 						local source_names = {
 							luasnip = "[Snip]",
 							nvim_lsp = "[LSP]",
+							-- nvim_lsp_signature_help = "[Sig]",
 							buffer = "[Buf]",
 							path = "[Path]",
 						}

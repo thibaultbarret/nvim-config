@@ -34,3 +34,5 @@ opt.list = true
 opt.listchars:append({ nbsp = "␣", trail = "•", precedes = "«", extends = "»", tab = "> " })
 
 opt.winborder = "rounded"
+opt.updatetime = 100
+opt.backupcopy = "yes"

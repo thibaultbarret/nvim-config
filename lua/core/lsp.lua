@@ -1,4 +1,13 @@
-vim.lsp.enable({ "lua_ls", "pyright", "ruff" })
+vim.lsp.config("*", {
+	capabilities = {
+		workspace = {
+			didChangeWatchedFiles = {
+				dynamicRegistration = true,
+				relativePatternSupport = true,
+			},
+		},
+	},
+})
 
 vim.api.nvim_create_autocmd("LspAttach", {
 	group = vim.api.nvim_create_augroup("lsp-attach", { clear = true }),
@@ -139,3 +148,9 @@ vim.api.nvim_create_user_command("DiagnosticDebug", function()
 		)
 	end
 end, { desc = "Debug diagnostic information" })
+
+vim.lsp.enable({
+	"lua_ls",
+	"pyright",
+	"ruff",
+})
