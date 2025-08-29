@@ -105,4 +105,17 @@ return {
 			}
 		)
 	),
+	-- Snippet pour __init__
+	s("init", {
+		t("# --- 🔧 INITIALIZATION ---"),
+		t({ "", "def __init__(self, " }),
+		i(1, "args"),
+		t("):"),
+		t({ "", '    """' }),
+		t({ "", "    " }),
+		i(2, "Initialize the class."),
+		t({ "", '    """' }),
+		t({ "", "    " }),
+		i(0),
+	}),
 }

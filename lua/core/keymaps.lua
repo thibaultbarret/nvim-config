@@ -41,8 +41,8 @@ local function smart_paste_above()
 	end
 end
 
-map({ "n", "v" }, "<C-v>", smart_paste_below, { desc = "paste from clipboard below" })
-map({ "n", "v" }, "<C-V>", smart_paste_above, { desc = "paste from clipboard above" })
+map({ "n", "v" }, "<C-p>", smart_paste_below, { desc = "paste from clipboard below" })
+map({ "n", "v" }, "<C-P>", smart_paste_above, { desc = "paste from clipboard above" })
 
 -- Commentaires
 map("n", "<C-q>", "gcc", { desc = "toggle comment", remap = true })
@@ -53,7 +53,39 @@ map("n", "n", "nzzzv", { desc = "Next search result (centered)" })
 map("n", "N", "Nzzzv", { desc = "Previous search result (centered)" })
 
 -- Supprimer sans copier
-map({ "n", "v" }, "<leader>d", '"_d', { desc = "Delete without yanking" })
+-- map({ "n", "v" }, "<leader>d", '"_d', { desc = "Delete without yanking" })
 
 -- Tout selectionner
 map({ "n" }, "<leader>aa", "ggVG", { desc = "Select all" })
+
+-- Ouvrir fichier à partir du path dans un nouveau buffer
+map("n", "<leader>ofb", "<cmd>", { desc = "Open file in new buffer" })
+
+-- Ouvrir fichier à partir du path dans un split vertical
+map("n", "<leader>ofvs", "<cmd>", { desc = "Open file in new buffer" })
+
+-- Remplacer le mot sous le curseur
+map("n", "<leader>rew", function()
+	-- Copie le mot sous le curseur
+	vim.cmd("normal! yiw")
+	-- Lance la substitution globale avec le mot copié
+	local word = vim.fn.getreg("0")
+	vim.api.nvim_feedkeys(
+		":%s/"
+			.. vim.fn.escape(word, "/\\")
+			.. "//g"
+			.. string.rep(vim.api.nvim_replace_termcodes("<Left>", true, false, true), 2),
+		"n",
+		false
+	)
+end, { desc = "Remplacer le mot sous le curseur globalement" })
+
+-- Remplacer le mot sous le curseur sur la ligne
+-- map("n", "rel", function()
+-- 	-- Copie le mot sous le curseur
+-- 	vim.cmd("normal! yiw")
+-- 	-- Lance la substitution sur la ligne courante avec le mot copié
+-- 	local word = vim.fn.getreg("0")
+-- 	-- Utilise vim.fn.feedkeys pour s'assurer que l'autocomplétion fonctionne
+-- 	vim.fn.feedkeys(":.s/" .. vim.fn.escape(word, "/\\") .. "//g" .. string.rep("\27[D", 2), "n")
+-- end, { desc = "Remplacer le mot sous le curseur sur la ligne courante" })

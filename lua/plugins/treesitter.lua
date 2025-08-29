@@ -5,9 +5,8 @@ return {
 	build = ":TSUpdate",
 	config = function()
 		require("nvim-treesitter.configs").setup({
-			highlight = { enable = true },
+			highlight = { enable = true, additional_vim_regex_highlighting = false },
 			indent = { enable = true },
-			additionnal_vim_regex_highlighting = false,
 			ensure_installed = {
 				"bash",
 				"python",
@@ -16,7 +15,9 @@ return {
 				"lua",
 				"gitignore",
 				"cpp",
+				"c",
 			},
 		})
 	end,
+	vim.treesitter.language.register("cpp", "mfront"),
 }

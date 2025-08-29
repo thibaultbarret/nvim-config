@@ -47,3 +47,7 @@ opt.listchars:append({ nbsp = "␣", trail = "•", precedes = "«", extends = "
 opt.winborder = "rounded"
 opt.updatetime = 100
 opt.backupcopy = "yes"
+
+opt.wildmenu = true
+opt.wildmode = { "longest:full", "full" }
+opt.wildoptions = "pum"

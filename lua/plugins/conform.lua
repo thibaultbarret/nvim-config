@@ -14,6 +14,8 @@ return {
 				sh = { "beautysh" },
 				bash = { "beautysh" },
 				zsh = { "beautysh" },
+				latex = { "latexindent" },
+				tex = { "latexindent" },
 			},
 			formatters = {
 				prettier = {
@@ -23,9 +25,9 @@ return {
 						"--use-tabs",
 						"false", -- << ça force les espaces
 					},
-					stylua = {
-						prepend_args = { "--indent-type", "Spaces", "--indent-width", "4" },
-					},
+				},
+				stylua = {
+					prepend_args = { "--indent-type", "Spaces", "--indent-width", "4" },
 				},
 			},
 			format_on_save = {

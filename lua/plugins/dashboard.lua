@@ -105,7 +105,7 @@ return {
 		end, { desc = "Open Alpha Dashboard" })
 
 		-- Mapping pour ouvrir le dashboard rapidement
-		vim.keymap.set("n", "<leader>db", "<cmd>Dashboard<CR>", { desc = "Open Dashboard" })
+		vim.keymap.set("n", "<leader>DB", "<cmd>Dashboard<CR>", { desc = "Open Dashboard" })
 	end,
 }
 
