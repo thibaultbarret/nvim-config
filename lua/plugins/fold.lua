@@ -232,6 +232,225 @@ return {
             return folds
         end
 
+        -- Fonction personnalisée pour détecter les groupes @overload en Python
+        local function python_overload_provider(bufnr)
+            local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+            local folds = {}
+            local i = 1
+
+            while i <= #lines do
+                local line = lines[i]
+
+                -- Détecte le début d'un groupe @overload
+                if line:match("^%s*@overload%s*$") then
+                    local overload_start = i - 1 -- 0-indexé
+                    local base_indent = line:match("^(%s*)")
+                    local j = i
+                    local last_overload_end = nil
+
+                    -- Cherche tous les overloads consécutifs
+                    while j <= #lines do
+                        local current_line = lines[j]
+
+                        -- Skip les lignes vides et commentaires
+                        if current_line:match("^%s*$") or current_line:match("^%s*#") then
+                            j = j + 1
+                            goto continue_overload
+                        end
+
+                        local current_indent = current_line:match("^(%s*)")
+
+                        -- Si l'indentation est différente du niveau de base, on continue
+                        if #current_indent ~= #base_indent then
+                            j = j + 1
+                            goto continue_overload
+                        end
+
+                        -- Vérifie si c'est un autre @overload
+                        if current_line:match("^%s*@overload%s*$") then
+                            -- Trouve la fin de ce @overload (sa fonction def associée)
+                            local k = j + 1
+                            while k <= #lines do
+                                local overload_line = lines[k]
+
+                                if overload_line:match("^%s*$") or overload_line:match("^%s*#") then
+                                    k = k + 1
+                                    goto continue_overload_search
+                                end
+
+                                -- Si on trouve la définition de fonction pour cet overload
+                                if overload_line:match("^%s*def%s+") then
+                                    -- Trouve la fin de cette définition (en gros jusqu'à "..." ou fin de params)
+                                    while k <= #lines do
+                                        local def_line = lines[k]
+                                        if def_line:match("%.%.%.") or def_line:match("->.*:") then
+                                            last_overload_end = k - 1 -- 0-indexé
+                                            break
+                                        end
+                                        k = k + 1
+                                        if k - j > 20 then
+                                            break
+                                        end -- Protection
+                                    end
+                                    break
+                                end
+
+                                k = k + 1
+                                if k - j > 20 then
+                                    break
+                                end -- Protection
+
+                                ::continue_overload_search::
+                            end
+
+                            j = k + 1
+                            goto continue_overload
+                        end
+
+                        -- Vérifie si c'est une définition de fonction sans @overload
+                        if current_line:match("^%s*def%s+") then
+                            -- C'est probablement l'implémentation finale, on s'arrête
+                            break
+                        end
+
+                        -- Si on rencontre autre chose qu'un @overload ou def à ce niveau, on s'arrête
+                        if not current_line:match("^%s*@") then
+                            break
+                        end
+
+                        j = j + 1
+
+                        -- Protection contre les boucles infinies
+                        if j - i > 200 then
+                            break
+                        end
+
+                        ::continue_overload::
+                    end
+
+                    -- Si on a trouvé au moins un overload complet, on crée le fold
+                    if last_overload_end and last_overload_end > overload_start then
+                        table.insert(folds, {
+                            startLine = overload_start,
+                            endLine = last_overload_end,
+                            kind = "overload",
+                        })
+                        i = j
+                    else
+                        i = i + 1
+                    end
+                else
+                    i = i + 1
+                end
+            end
+
+            return folds
+        end
+
+        -- Fonction personnalisée pour détecter les blocs case dans match statements Python
+        local function python_match_case_provider(bufnr)
+            local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+            local folds = {}
+            local i = 1
+
+            while i <= #lines do
+                local line = lines[i]
+
+                -- Détecte un statement match
+                if line:match("^%s*match%s+") then
+                    local j = i + 1
+                    local match_indent = line:match("^(%s*)")
+
+                    -- Cherche les blocs case dans ce match
+                    while j <= #lines do
+                        local current_line = lines[j]
+
+                        -- Skip les lignes vides et commentaires
+                        if current_line:match("^%s*$") or current_line:match("^%s*#") then
+                            j = j + 1
+                            goto continue_match
+                        end
+
+                        local current_indent = current_line:match("^(%s*)")
+
+                        -- Si on sort du bloc match (indentation égale ou moindre)
+                        if #current_indent <= #match_indent then
+                            break
+                        end
+
+                        -- Détecte un bloc case
+                        if current_line:match("^%s*case%s+") then
+                            local case_start = j - 1 -- 0-indexé
+                            local case_indent = current_indent
+                            local k = j + 1
+                            local case_end = j - 1
+
+                            -- Trouve la fin du bloc case
+                            while k <= #lines do
+                                local case_line = lines[k]
+
+                                -- Skip les lignes vides
+                                if case_line:match("^%s*$") then
+                                    k = k + 1
+                                    goto continue_case
+                                end
+
+                                local case_line_indent = case_line:match("^(%s*)")
+
+                                -- Si on rencontre un autre case ou on sort du match
+                                if
+                                    #case_line_indent <= #case_indent
+                                    and (case_line:match("^%s*case%s+") or #case_line_indent <= #match_indent)
+                                then
+                                    break
+                                end
+
+                                -- Si la ligne est plus indentée ou au même niveau que le contenu du case
+                                if #case_line_indent > #case_indent or case_line:match("^%s*#") then
+                                    case_end = k - 1
+                                end
+
+                                k = k + 1
+
+                                -- Protection
+                                if k - j > 100 then
+                                    break
+                                end
+
+                                ::continue_case::
+                            end
+
+                            -- Créer le fold pour ce case si il a du contenu
+                            if case_end > case_start then
+                                table.insert(folds, {
+                                    startLine = case_start,
+                                    endLine = case_end,
+                                    kind = "case",
+                                })
+                            end
+
+                            j = k
+                        else
+                            j = j + 1
+                        end
+
+                        -- Protection
+                        if j - i > 200 then
+                            break
+                        end
+
+                        ::continue_match::
+                    end
+
+                    i = j
+                else
+                    i = i + 1
+                end
+            end
+
+            return folds
+        end
+
         -- Fonction personnalisée pour détecter les accolades dans les fichiers .tex
         local function tex_braces_provider(bufnr)
             local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
@@ -367,6 +586,8 @@ return {
                     local treesitter_folds = require("ufo.provider.treesitter").getFolds(bufnr) or {}
                     local literal_folds = python_literal_provider(bufnr) or {}
                     local attributes_folds = python_class_attributes_provider(bufnr) or {}
+                    local overload_folds = python_overload_provider(bufnr) or {}
+                    local match_case_folds = python_match_case_provider(bufnr) or {}
 
                     -- Fusionne tous les types de folds
                     local all_folds = {}
@@ -377,6 +598,12 @@ return {
                         table.insert(all_folds, fold)
                     end
                     for _, fold in ipairs(attributes_folds) do
+                        table.insert(all_folds, fold)
+                    end
+                    for _, fold in ipairs(overload_folds) do
+                        table.insert(all_folds, fold)
+                    end
+                    for _, fold in ipairs(match_case_folds) do
                         table.insert(all_folds, fold)
                     end
 
@@ -423,10 +650,22 @@ return {
                 local icon = " 󰁂 "
                 local highlight = "MoreMsg"
 
+                -- Python - @overload
+                if line_text:match("^%s*@overload") then
+                    icon = " 󰡱 "
+                    highlight = "Special"
+                -- Python - case dans match
+                elseif line_text:match("^%s*case%s+") then
+                    icon = " 󰃽 "
+                    highlight = "Conditional"
                 -- Python - Literal[]
-                if line_text:match("Literal%s*%[") then
+                elseif line_text:match("Literal%s*%[") then
                     icon = " 󰅩 "
                     highlight = "Type"
+                -- Python - Attributs de classe
+                elseif line_text:match("^%s+[%w_]+%s*:") or line_text:match("^%s+[%w_]+%s*=") then
+                    icon = " 󰜢 "
+                    highlight = "Identifier"
                 -- LaTeX - Environnements
                 elseif line_text:match("\\begin%s*{") then
                     icon = " 󰙅 "
@@ -487,31 +726,6 @@ return {
             ft_ignore = { "TelescopePrompt", "alpha", "dashboard" },
         })
 
-        -- Keymaps pour les folds
-        vim.keymap.set("n", "zR", require("ufo").openAllFolds, { desc = "Open all folds" })
-        vim.keymap.set("n", "zM", require("ufo").closeAllFolds, { desc = "Close all folds" })
-        vim.keymap.set("n", "zr", require("ufo").openFoldsExceptKinds, { desc = "Open folds except kinds" })
-        vim.keymap.set("n", "zm", require("ufo").closeFoldsWith, { desc = "Close folds with" })
-        vim.keymap.set("n", "zK", function()
-            local winid = require("ufo").peekFoldedLinesUnderCursor()
-            if not winid then
-                vim.lsp.buf.hover()
-            end
-        end, { desc = "Peek fold or LSP hover" })
-
-        -- Fold par type spécifique (Python)
-        vim.keymap.set("n", "<leader>zf", function()
-            require("ufo").closeFoldsWith("function")
-        end, { desc = "Fold functions" })
-
-        vim.keymap.set("n", "<leader>zc", function()
-            require("ufo").closeFoldsWith("class")
-        end, { desc = "Fold classes" })
-
-        vim.keymap.set("n", "<leader>zi", function()
-            require("ufo").closeFoldsWith("import")
-        end, { desc = "Fold imports" })
-
         -- Keymaps pour les folds (conservés de la configuration originale)
         vim.keymap.set("n", "zR", require("ufo").openAllFolds, { desc = "Open all folds" })
         vim.keymap.set("n", "zM", require("ufo").closeAllFolds, { desc = "Close all folds" })
@@ -536,22 +750,5 @@ return {
         vim.keymap.set("n", "<leader>zi", function()
             require("ufo").closeFoldsWith("import")
         end, { desc = "Fold imports" })
-
-        -- Fonction pour toggle tous les folds Literal[]
-        local function toggle_literal_folds()
-            local bufnr = vim.api.nvim_get_current_buf()
-            local folds = python_literal_provider(bufnr)
-
-            if #folds > 0 then
-                for _, fold in ipairs(folds) do
-                    local fold_closed = vim.fn.foldclosed(fold.startLine + 1) ~= -1
-                    if fold_closed then
-                        vim.cmd(string.format("%d,%dfoldopen", fold.startLine + 1, fold.endLine + 1))
-                    else
-                        vim.cmd(string.format("%d,%dfoldclose", fold.startLine + 1, fold.endLine + 1))
-                    end
-                end
-            end
-        end
     end,
 }
