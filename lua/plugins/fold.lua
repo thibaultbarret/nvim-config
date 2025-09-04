@@ -12,7 +12,7 @@ return {
         vim.o.foldlevelstart = 99
         vim.o.foldenable = true
 
-        -- Fonction personnalisée pour détecter les Literal[] en Python
+        -- Fonction personnalisée pour détecter les Literal[] et Union[] en Python
         local function python_literal_provider(bufnr)
             local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
             local folds = {}
@@ -20,8 +20,15 @@ return {
 
             while i <= #lines do
                 local line = lines[i]
-                -- Détecte les patterns Literal[] avec gestion des multilignes
+                -- Détecte les patterns Literal[] ou Union[] avec gestion des multilignes
+                local pattern_type = nil
                 if line:match("Literal%s*%[") then
+                    pattern_type = "literal"
+                elseif line:match("Union%s*%[") then
+                    pattern_type = "union"
+                end
+
+                if pattern_type then
                     local start_line = i - 1 -- 0-indexé pour nvim-ufo
                     local bracket_count = 0
                     local in_string = false
@@ -61,11 +68,11 @@ return {
                                 elseif char == "]" then
                                     bracket_count = bracket_count - 1
                                     if bracket_count == 0 then
-                                        -- Fin du Literal trouvée
+                                        -- Fin du Literal/Union trouvée
                                         table.insert(folds, {
                                             startLine = start_line,
                                             endLine = j - 1, -- 0-indexé
-                                            kind = "literal",
+                                            kind = pattern_type,
                                         })
                                         i = j
                                         goto continue
@@ -84,7 +91,7 @@ return {
 
                         j = j + 1
 
-                        -- Protection contre les boucles infinies (augmentée pour les gros Literal)
+                        -- Protection contre les boucles infinies (augmentée pour les gros Union)
                         if j - i > 200 then
                             break
                         end
@@ -658,6 +665,10 @@ return {
                 elseif line_text:match("^%s*case%s+") then
                     icon = " 󰃽 "
                     highlight = "Conditional"
+                -- Python - Union[]
+                elseif line_text:match("Union%s*%[") then
+                    icon = " 󰆧 "
+                    highlight = "Type"
                 -- Python - Literal[]
                 elseif line_text:match("Literal%s*%[") then
                     icon = " 󰅩 "

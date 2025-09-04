@@ -16,7 +16,7 @@ end
 
 -- Fonction pour la date
 local function date()
-    return os.date("%Y-%m-%d")
+    return os.date("%Y-%m-%d %H:%M")
 end
 
 -- Fonction pour l'utilisateur
@@ -27,49 +27,77 @@ end
 -- Snippets essentiels
 local snippets = {
     -- TODO
-    s("todo", fmt("{}{}: {} - {} ({})", {
-        f(comment),
-        t("TODO"),
-        i(1, "description"),
-        f(user),
-        f(date),
-    })),
+    s(
+        "todo",
+        fmt("{}{}: {} - {} ({})", {
+            f(comment),
+            t("TODO"),
+            i(1, "description"),
+            f(user),
+            f(date),
+        })
+    ),
 
     -- FIXME
-    s("fixme", fmt("{}{}: {} - {} ({})", {
-        f(comment),
-        t("FIXME"),
-        i(1, "problème à corriger"),
-        f(user),
-        f(date),
-    })),
+    s(
+        "fixme",
+        fmt("{}{}: {} - {} ({})", {
+            f(comment),
+            t("FIXME"),
+            i(1, "problème à corriger"),
+            f(user),
+            f(date),
+        })
+    ),
 
     -- NOTE
-    s("note", fmt("{}{}: {}", {
-        f(comment),
-        t("NOTE"),
-        i(1, "note importante"),
-    })),
+    s(
+        "note",
+        fmt("{}{}: {}", {
+            f(comment),
+            t("NOTE"),
+            i(1, "note importante"),
+        })
+    ),
 
     -- HACK
-    s("hack", fmt("{}{}: {}", {
-        f(comment),
-        t("HACK"),
-        i(1, "solution temporaire"),
-    })),
+    s(
+        "hack",
+        fmt("{}{}: {}", {
+            f(comment),
+            t("HACK"),
+            i(1, "solution temporaire"),
+        })
+    ),
 
     -- Versions courtes
-    s("td", fmt("{}{}: {}", {
-        f(comment),
-        t("TODO"),
-        i(1),
-    })),
+    s(
+        "td",
+        fmt("{}{}: {}", {
+            f(comment),
+            t("TODO"),
+            i(1),
+        })
+    ),
 
-    s("fx", fmt("{}{}: {}", {
-        f(comment),
-        t("FIXME"),
-        i(1),
-    })),
+    s(
+        "fx",
+        fmt("{}{}: {}", {
+            f(comment),
+            t("FIXME"),
+            i(1),
+        })
+    ),
+
+    s(
+        "fig",
+        fmt("{}{}: {} - ({})", {
+            f(comment),
+            t("FIG"),
+            i(1, "description"),
+            f(date),
+        })
+    ),
 }
 
 -- Ajouter pour tous les filetypes
