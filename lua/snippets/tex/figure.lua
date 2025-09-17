@@ -1,5 +1,4 @@
 local ls = require("luasnip")
--- snippets/tex/command.lua
 local s = ls.snippet
 local t = ls.text_node
 local i = ls.insert_node
@@ -90,75 +89,73 @@ local function sanitize_label(args, snip)
 end
 
 return {
-    -- Snippet pour \input{}
-    s("input", {
-        t("\\input{"),
-        i(1, "filename"),
-        t("}"),
-        i(0),
-    }),
-
-    -- Snippet pour \include{} (alternative à input)
-    s("include", {
-        t("\\include{"),
-        i(1, "filename"),
-        t("}"),
-        i(0),
-    }),
-
-    -- Snippet pour \includeonly{}
-    s("includeonly", {
-        t("\\includeonly{"),
-        i(1, "filename1,filename2"),
-        t("}"),
-        i(0),
-    }),
-
-    -- Snippet plus avancé avec choix entre input/include
-    s("inp", {
-        c(1, {
-            t("\\input{"),
-            t("\\include{"),
-        }),
-        i(2, "filename"),
-        t("}"),
-        i(0),
-    }),
-
-    -- Snippet avec extension automatique .tex
-    s("inputtex", {
-        t("\\input{"),
-        i(1, "filename"),
-        f(function(args)
-            local name = args[1][1]
-            if name and not name:match("%.tex$") then
-                return ".tex"
-            end
-            return ""
-        end, { 1 }),
-        t("}"),
-        i(0),
-    }),
-
-    -- newcommand
-    s("newcommand", {
-        t("\\newcommand{\\"),
-        i(1, "command name"),
-        t("}{"),
-        i(2, "command"),
-        t("\\xspace}"),
-        t({ "", "" }),
-    }),
-
-    -- Equation:
-    s("equ", {
-        t("\\begin{equation} %"),
+    -- Figure:
+    s("figure", {
+        t("\\begin{figure}[h!] % "),
         i(1),
         t({ "", "    " }),
         i(0),
-        t({ "", "    \\label{equ:" }),
+        t({ "", "    \\centering" }),
+        t({ "", "    \\caption{\\label{fig:" }),
         f(sanitize_label, { 1 }),
         t("}"),
-        t({ "", "\\end{equation}" }),
+        rep(1),
+        t("}"),
+        t({ "", "\\end{figure}" }),
+    }),
+    -- Figure with 2 subfigures:
+    s("subfig2", {
+        t("\\begin{figure}[h!] % "),
+        i(1),
+        t({ "", "    \\begin{subfigure}[b]{0.49\\linewidth} % " }),
+        i(2),
+        t({ "", "        " }),
+        -- t("")
+        t({ "", "        \\centering" }),
+        t({ "", "        \\caption{\\label{subfig:" }),
+        f(sanitize_label, { 2 }),
+        t("}"),
+        rep(2),
+        t("}"),
+        t({ "", "    \\end{subfigure}" }),
+        t({ "", "    ~" }),
+        -- second subfigure
+        t({ "", "    \\begin{subfigure}[b]{0.49\\linewidth} % " }),
+        i(3),
+        t({ "", "        " }),
+        -- t("")
+        t({ "", "        \\centering" }),
+        t({ "", "        \\caption{\\label{subfig:" }),
+        f(sanitize_label, { 3 }),
+        t("}"),
+        rep(3),
+        t("}"),
+        t({ "", "    \\end{subfigure}" }),
+        t({ "", "    \\centering" }),
+        t({ "", "    \\caption{\\label{fig:" }),
+        f(sanitize_label, { 1 }),
+        t("}"),
+        rep(1),
+        t("}"),
+        t({ "", "\\end{figure}" }),
+        t({ "", "" }),
+        i(0),
+    }),
+    -- Figure with TikZ externalisation:
+    s("figtikz", {
+        t("\\begin{figure}[h!] % "),
+        i(1),
+        t({ "", "    \\tikzsetnextfilename{" }),
+        f(sanitize_label, { 1 }),
+        t({ "}", "    \\input{Tikz/" }),
+        f(sanitize_label, { 1 }),
+        t(".tex}"),
+        t({ "", "    \\centering" }),
+        t({ "", "    \\caption{\\label{fig:" }),
+        f(sanitize_label, { 1 }),
+        t("}"),
+        rep(1),
+        t("}"),
+        t({ "", "\\end{figure}" }),
     }),
 }

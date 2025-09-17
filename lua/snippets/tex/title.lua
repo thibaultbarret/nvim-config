@@ -1,5 +1,4 @@
 local ls = require("luasnip")
--- snippets/tex/command.lua
 local s = ls.snippet
 local t = ls.text_node
 local i = ls.insert_node
@@ -90,75 +89,36 @@ local function sanitize_label(args, snip)
 end
 
 return {
-    -- Snippet pour \input{}
-    s("input", {
-        t("\\input{"),
-        i(1, "filename"),
-        t("}"),
-        i(0),
-    }),
-
-    -- Snippet pour \include{} (alternative à input)
-    s("include", {
-        t("\\include{"),
-        i(1, "filename"),
-        t("}"),
-        i(0),
-    }),
-
-    -- Snippet pour \includeonly{}
-    s("includeonly", {
-        t("\\includeonly{"),
-        i(1, "filename1,filename2"),
-        t("}"),
-        i(0),
-    }),
-
-    -- Snippet plus avancé avec choix entre input/include
-    s("inp", {
-        c(1, {
-            t("\\input{"),
-            t("\\include{"),
-        }),
-        i(2, "filename"),
-        t("}"),
-        i(0),
-    }),
-
-    -- Snippet avec extension automatique .tex
-    s("inputtex", {
-        t("\\input{"),
-        i(1, "filename"),
-        f(function(args)
-            local name = args[1][1]
-            if name and not name:match("%.tex$") then
-                return ".tex"
-            end
-            return ""
-        end, { 1 }),
-        t("}"),
-        i(0),
-    }),
-
-    -- newcommand
-    s("newcommand", {
-        t("\\newcommand{\\"),
-        i(1, "command name"),
-        t("}{"),
-        i(2, "command"),
-        t("\\xspace}"),
-        t({ "", "" }),
-    }),
-
-    -- Equation:
-    s("equ", {
-        t("\\begin{equation} %"),
+    -- Chapter:
+    s("chapter", {
+        t("\\chapter{"),
         i(1),
-        t({ "", "    " }),
-        i(0),
-        t({ "", "    \\label{equ:" }),
+        t({ "}", "\\label{chap:" }),
         f(sanitize_label, { 1 }),
         t("}"),
-        t({ "", "\\end{equation}" }),
+    }),
+    -- Section:
+    s("section", {
+        t("\\section{"),
+        i(1),
+        t({ "}", "\\label{sec:" }),
+        f(sanitize_label, { 1 }),
+        t("}"),
+    }),
+    -- Subsection:
+    s("subsection", {
+        t("\\subsection{"),
+        i(1),
+        t({ "}", "\\label{sub:" }),
+        f(sanitize_label, { 1 }),
+        t("}"),
+    }),
+    -- #
+    s("subsubsection", {
+        t("\\subsubsection{"),
+        i(1),
+        t({ "}", "\\label{ssub:" }),
+        f(sanitize_label, { 1 }),
+        t("}"),
     }),
 }

@@ -1,10 +1,10 @@
 vim.g.mapleader = " "
 -- Récupérer les attributs de CursorLine et les appliquer à CursorColumn
 vim.api.nvim_create_autocmd("ColorScheme", {
-	callback = function()
-		local cursorline_hl = vim.api.nvim_get_hl(0, { name = "CursorLine" })
-		vim.api.nvim_set_hl(0, "CursorColumn", cursorline_hl)
-	end,
+    callback = function()
+        local cursorline_hl = vim.api.nvim_get_hl(0, { name = "CursorLine" })
+        vim.api.nvim_set_hl(0, "CursorColumn", cursorline_hl)
+    end,
 })
 
 -- Appliquer immédiatement
@@ -15,8 +15,14 @@ local opt = vim.opt
 -- Numero des lignes
 opt.number = true
 opt.relativenumber = true
+
+-- Curseur
 opt.cursorline = true
 opt.cursorcolumn = true
+
+-- Prise en compte de l'underscore et du colon comme separateur de mots
+opt.iskeyword:remove("_")
+opt.iskeyword:remove(":")
 
 -- Indentation
 opt.tabstop = 4

@@ -6,8 +6,10 @@ local i = ls.insert_node
 
 -- Liste des fichiers de snippets à charger
 local snippet_files = {
-    "command",
-    "list",
+    -- "command",
+    -- "list",
+    -- "tikz",
+    -- "title",
     -- "math",
     -- "environments",
     -- "formatting",
@@ -24,6 +26,16 @@ local snippets = {
         t({ "", "\\end{document}" }),
     }),
 
+    s("standalone", {
+        t("\\documentclass[margin=1cm]{standalone}"),
+        t({ "", "", "\\usepackage{tikzpgfplots, MMC, unite}" }),
+        t({ "", "", "\\begin{document}" }),
+        t({ "", "\\begin{tikzpicture}" }),
+        t({ "", "" }),
+        i(1),
+        t({ "", "\\end{tikzpicture}" }),
+        t({ "", "\\end{document}" }),
+    }),
     s("usepackage", {
         t("\\usepackage{"),
         i(1),

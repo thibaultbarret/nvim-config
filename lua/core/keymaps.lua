@@ -19,26 +19,26 @@ map("n", "<C-c>", "<cmd>%y+<CR>", { desc = "general copy whole file" })
 
 -- Copie du texte selectionne dans le clipboard
 map("v", "<C-c>", function()
-	vim.cmd('normal! "+y')
+    vim.cmd('normal! "+y')
 end, { desc = "copy selection to clipboard" })
 
 -- Coller du texte depuis le clipboard
 local function smart_paste_below()
-	local mode = vim.fn.mode()
-	if mode == "v" or mode == "V" or mode == "\22" then -- modes visual
-		vim.cmd('normal! "+p')
-	else -- mode normal
-		vim.cmd('normal! "+p')
-	end
+    local mode = vim.fn.mode()
+    if mode == "v" or mode == "V" or mode == "\22" then -- modes visual
+        vim.cmd('normal! "+p')
+    else -- mode normal
+        vim.cmd('normal! "+p')
+    end
 end
 
 local function smart_paste_above()
-	local mode = vim.fn.mode()
-	if mode == "v" or mode == "V" or mode == "\22" then -- modes visual
-		vim.cmd('normal! "+p') -- en visual, P et p font la même chose
-	else -- mode normal
-		vim.cmd('normal! "+P')
-	end
+    local mode = vim.fn.mode()
+    if mode == "v" or mode == "V" or mode == "\22" then -- modes visual
+        vim.cmd('normal! "+p') -- en visual, P et p font la même chose
+    else -- mode normal
+        vim.cmd('normal! "+P')
+    end
 end
 
 map({ "n", "v" }, "<C-p>", smart_paste_below, { desc = "paste from clipboard below" })
@@ -59,25 +59,25 @@ map("n", "N", "Nzzzv", { desc = "Previous search result (centered)" })
 map({ "n" }, "<leader>aa", "ggVG", { desc = "Select all" })
 
 -- Ouvrir fichier à partir du path dans un nouveau buffer
-map("n", "<leader>ofb", "<cmd>", { desc = "Open file in new buffer" })
+map("n", "<leader>ofb", "yi{:edit <C-r>0<CR>", { desc = "Open file in new buffer" })
 
 -- Ouvrir fichier à partir du path dans un split vertical
-map("n", "<leader>ofvs", "<cmd>", { desc = "Open file in new buffer" })
+map("n", "<leader>ofvs", "yi{:vsplit <C-r>0<CR>", { desc = "Open file in vertical split" })
 
 -- Remplacer le mot sous le curseur
 map("n", "<leader>rew", function()
-	-- Copie le mot sous le curseur
-	vim.cmd("normal! yiw")
-	-- Lance la substitution globale avec le mot copié
-	local word = vim.fn.getreg("0")
-	vim.api.nvim_feedkeys(
-		":%s/"
-			.. vim.fn.escape(word, "/\\")
-			.. "//g"
-			.. string.rep(vim.api.nvim_replace_termcodes("<Left>", true, false, true), 2),
-		"n",
-		false
-	)
+    -- Copie le mot sous le curseur
+    vim.cmd("normal! yiw")
+    -- Lance la substitution globale avec le mot copié
+    local word = vim.fn.getreg("0")
+    vim.api.nvim_feedkeys(
+        ":%s/"
+            .. vim.fn.escape(word, "/\\")
+            .. "//g"
+            .. string.rep(vim.api.nvim_replace_termcodes("<Left>", true, false, true), 2),
+        "n",
+        false
+    )
 end, { desc = "Remplacer le mot sous le curseur globalement" })
 
 -- Remplacer le mot sous le curseur sur la ligne
