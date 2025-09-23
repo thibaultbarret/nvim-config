@@ -585,6 +585,76 @@ return {
             return folds
         end
 
+        -- Nouvelle fonction pour détecter les crochets dans les fichiers .tex
+        local function tex_brackets_provider(bufnr)
+            local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+            local folds = {}
+            local i = 1
+
+            while i <= #lines do
+                local line = lines[i]
+
+                -- Détecte les groupes de crochets multilignes (minimum 2 lignes)
+                -- Recherche une ligne contenant un crochet ouvrant
+                local bracket_start_pos = line:find("%[")
+                if bracket_start_pos then
+                    local start_line = i - 1 -- 0-indexé pour nvim-ufo
+                    local bracket_count = 0
+                    local j = i
+                    local found_opening = false
+
+                    -- Analyse le contenu pour compter les crochets
+                    while j <= #lines do
+                        local current_line = lines[j]
+                        local pos = 1
+
+                        while pos <= #current_line do
+                            local char = current_line:sub(pos, pos)
+
+                            -- Ignore les crochets échappés
+                            if char == "\\" and pos < #current_line then
+                                pos = pos + 1 -- Skip le caractère suivant
+                            elseif char == "[" then
+                                bracket_count = bracket_count + 1
+                                found_opening = true
+                            elseif char == "]" and found_opening then
+                                bracket_count = bracket_count - 1
+
+                                -- Si on ferme complètement le groupe de crochets
+                                if bracket_count == 0 then
+                                    -- Créer le fold seulement si c'est multiligne
+                                    if j > i then
+                                        table.insert(folds, {
+                                            startLine = start_line,
+                                            endLine = j - 1,
+                                            kind = "brackets",
+                                        })
+                                    end
+                                    i = j
+                                    goto continue_brackets
+                                end
+                            end
+
+                            pos = pos + 1
+                        end
+
+                        j = j + 1
+
+                        -- Protection contre les boucles infinies
+                        if j - i > 100 then
+                            break
+                        end
+                    end
+
+                    ::continue_brackets::
+                end
+
+                i = i + 1
+            end
+
+            return folds
+        end
+
         -- Fonction améliorée de provider_selector
         local function enhanced_provider_selector(bufnr, filetype, buftype)
             if filetype == "python" then
@@ -618,16 +688,20 @@ return {
                 end
             elseif filetype == "tex" or filetype == "latex" then
                 return function(bufnr)
-                    -- Combine treesitter et notre détection custom des accolades LaTeX
+                    -- Combine treesitter et nos détections custom des accolades et crochets LaTeX
                     local treesitter_folds = require("ufo.provider.treesitter").getFolds(bufnr) or {}
-                    local tex_folds = tex_braces_provider(bufnr) or {}
+                    local tex_braces_folds = tex_braces_provider(bufnr) or {}
+                    local tex_brackets_folds = tex_brackets_provider(bufnr) or {}
 
-                    -- Fusionne les deux types de folds
+                    -- Fusionne les trois types de folds
                     local all_folds = {}
                     for _, fold in ipairs(treesitter_folds) do
                         table.insert(all_folds, fold)
                     end
-                    for _, fold in ipairs(tex_folds) do
+                    for _, fold in ipairs(tex_braces_folds) do
+                        table.insert(all_folds, fold)
+                    end
+                    for _, fold in ipairs(tex_brackets_folds) do
                         table.insert(all_folds, fold)
                     end
 
@@ -689,6 +763,10 @@ return {
                 elseif line_text:match("{%s*$") then
                     icon = " 󰅲 "
                     highlight = "Delimiter"
+                -- LaTeX - Crochets
+                elseif line_text:match("%[") then
+                    icon = " 󰘨 "
+                    highlight = "Special"
                 end
 
                 local suffix = (icon .. "%d "):format(endLnum - lnum)

@@ -30,6 +30,12 @@ return {
         i(1),
         t("} "),
     }),
+    -- tywriter
+    s("tt", {
+        t("\\texttt{"),
+        i(1),
+        t("} "),
+    }),
     -- quotes
     s("quotes", {
         t("\\og "),

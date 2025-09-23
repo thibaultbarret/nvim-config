@@ -215,8 +215,9 @@ return {
                         local item = entry:get_completion_item()
                         local path = item.label
 
-                        -- CORRECTION : Résoudre le chemin avant de vérifier s'il existe
-                        local resolved_path = vim.fn.resolve(vim.fn.expand(path))
+                        -- CORRECTION : Résoudre le chemin de manière plus robuste
+                        local cwd = vim.fn.expand(("#%d:p:h"):format(vim.api.nvim_get_current_buf()))
+                        local resolved_path = vim.fn.fnamemodify(cwd .. "/" .. path, ":p")
 
                         -- Protection contre les erreurs de fs_stat
                         local stat = nil
@@ -239,7 +240,8 @@ return {
                                     end -- Limiter le comptage
                                 end
                                 if count > 0 then
-                                    vim_item.menu = string.format("[Dir %d items]", count > 10 and "10+" or count)
+                                    vim_item.menu =
+                                        string.format("[Dir %s items]", count > 10 and "10+" or tostring(count))
                                 end
                             end
                         else
