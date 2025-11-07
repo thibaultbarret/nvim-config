@@ -1,9 +1,7 @@
 return {
     "lervag/vimtex",
-    lazy = false, -- we don't want to lazy load VimTeX
-    -- tag = "v2.15", -- uncomment to pin to a specific release
+    lazy = false,
     config = function()
-        -- VimTeX configuration goes here, e.g.
         vim.g.vimtex_view_method = "skim"
         vim.g.vimtex_view_skim_sync = 1
         vim.g.vimtex_view_skim_activate = 1
@@ -19,29 +17,27 @@ return {
             options = {
                 "-pdf",
                 "--shell-escape",
-                -- "-verbose",
+                "-verbose",
                 "-file-line-error",
                 "-synctex=1",
                 "-interaction=nonstopmode",
             },
         }
 
-        -- Options générales
+        -- Configuration de la quickfix
         vim.g.vimtex_quickfix_mode = 1
-        -- vim.g.vimtex_compiler_silent = 1
-        -- vim.g.vimtex_compiler_progname = "nvim"
-        -- vim.g.vimtex_quickfix_method = "pplatex"
+
+        -- Ignorer tous les warnings dans la quickfix
         vim.g.vimtex_quickfix_ignore_filters = {
-            "warning",
             "Underfull \\hbox",
             "Overfull \\hbox",
-            "LaTeX Warning: .*float specifier changed to",
+            "LaTeX Warning:",
             "LaTeX hooks Warning",
-            "Package hyperref Warning: Token not allowed in a PDF string",
-            "Duplicate entry",
+            "Package .* Warning:",
+            "Class .* Warning:",
         }
-        -- vim.g.vimtex_mappings_enabled = 1
-        -- vim.g.vimtex_indent_enabled = 1
-        -- vim.g.vimtex_syntax_enabled = 1
+
+        -- Alternative : n'ouvrir la quickfix que pour les erreurs
+        vim.g.vimtex_quickfix_open_on_warning = 0
     end,
 }

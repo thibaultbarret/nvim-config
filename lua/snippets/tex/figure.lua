@@ -141,7 +141,21 @@ return {
         t({ "", "" }),
         i(0),
     }),
-    -- Figure with TikZ externalisation:
+    -- Subfigure:
+    s("subfig", {
+        t({ "", "\\begin{subfigure}[b]{\\linewidth} % " }),
+        i(1),
+        t({ "", "    " }),
+        i(0),
+        t({ "", "    \\centering" }),
+        t({ "", "    \\caption{\\label{subfig:" }),
+        f(sanitize_label, { 1 }),
+        t("}"),
+        rep(1),
+        t("}"),
+        t({ "", "\\end{subfigure}" }),
+    }),
+    -- Figure with TikZ externalization:
     s("figtikz", {
         t("\\begin{figure}[h!] % "),
         i(1),
@@ -150,6 +164,23 @@ return {
         t({ "}", "    \\input{Tikz/" }),
         f(sanitize_label, { 1 }),
         t(".tex}"),
+        t({ "", "    \\centering" }),
+        t({ "", "    \\caption{\\label{fig:" }),
+        f(sanitize_label, { 1 }),
+        t("}"),
+        rep(1),
+        t("}"),
+        t({ "", "\\end{figure}" }),
+    }),
+    -- Figure with TikZ externatlization in file:
+    s("figtikzfolder", {
+        t("\\begin{figure}[h!] % "),
+        i(1),
+        t({ "", "    \\tikzsetnextfilename{" }),
+        f(sanitize_label, { 1 }),
+        t({ "}", "    \\input{Tikz/" }),
+        f(sanitize_label, { 1 }),
+        t("/figure.tex}"),
         t({ "", "    \\centering" }),
         t({ "", "    \\caption{\\label{fig:" }),
         f(sanitize_label, { 1 }),
