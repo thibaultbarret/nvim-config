@@ -80,6 +80,10 @@ map("n", "<leader>rew", function()
     )
 end, { desc = "Remplacer le mot sous le curseur globalement" })
 
+map("i", "<C-m>", function()
+    vim.fn.feedkeys(vim.fn["copilot#Accept"](), "")
+end, { desc = "Copilot Accept", noremap = true, silent = true })
+
 -- Remplacer le mot sous le curseur sur la ligne
 -- map("n", "rel", function()
 -- 	-- Copie le mot sous le curseur

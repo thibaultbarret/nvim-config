@@ -105,42 +105,4 @@ return {
             }
         )
     ),
-    -- Snippet pour __init__
-    s("init", {
-        t("# --- 🔧 INITIALIZATION ---"),
-        t({ "", "def __init__(self, " }),
-        i(1, "args"),
-        t("):"),
-        t({ "", '    """' }),
-        t({ "", "    " }),
-        i(2, "Initialize the class."),
-        t({ "", '    """' }),
-        t({ "", "    " }),
-        i(0),
-    }),
-    -- __init__ with list, dict, bool
-    s("init_all", {
-        t("# --- 🔧 INITIALIZATION ---"),
-        t({ "", "def __init__(self, " }),
-        i(1, "args"),
-        t("):"),
-        t({ "", '    """' }),
-        t({ "", "    " }),
-        i(2, "Initialize the class."),
-        t({ "", '    """' }),
-        t({ "", "    " }),
-        i(0),
-        -- List
-        t({ "", "", "def __init_list(self):", "" }),
-        t({ '    """Initialize lists."""' }),
-        t({ "", "    pass" }),
-        -- Dict
-        t({ "", "", "def __init_dict(self):", "" }),
-        t({ '    """Initialize dictionnaries."""' }),
-        t({ "", "    pass" }),
-        -- Bool
-        t({ "", "", "def __init_bool(self):", "" }),
-        t({ '    """Initialize booleans."""' }),
-        t({ "", "    pass" }),
-    }),
 }

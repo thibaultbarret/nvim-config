@@ -22,10 +22,10 @@ return {
                     enable = true,
                     inline_arrows = false,
                     icons = {
-                        corner = "└", -- Ajout d'un tiret
+                        corner = "└",
                         none = " ",
-                        edge = "│", -- Espace pour aligner
-                        item = "├", -- Ajout d'un tiret
+                        edge = "│",
+                        item = "├",
                         bottom = "─",
                     },
                 },
@@ -45,19 +45,19 @@ return {
             filters = {
                 dotfiles = false,
                 git_clean = false,
+                git_ignored = false, -- Ajoutez cette ligne
                 custom = {
                     "^.git$",
                     ".DS_Store",
                     "__pycache__",
                 },
             },
+            git = {
+                enable = false, -- Ajoutez cette section
+            },
             on_attach = function(bufnr)
                 local api = require("nvim-tree.api")
-
-                -- Charge tous les mappings par défaut
                 api.config.mappings.default_on_attach(bufnr)
-
-                -- Ajoute le mapping personnalisé pour 'cd'
                 vim.keymap.set("n", "cd", api.tree.change_root_to_node, {
                     desc = "CD (Change Root)",
                     buffer = bufnr,

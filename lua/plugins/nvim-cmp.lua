@@ -4,7 +4,6 @@ return {
         "hrsh7th/cmp-nvim-lsp",
         "hrsh7th/cmp-buffer",
         "hrsh7th/cmp-path",
-        -- "hrsh7th/cmp-nvim-lsp-signature-help",
         "hrsh7th/cmp-cmdLine",
         {
             "L3MON4D3/LuaSnip",
@@ -15,8 +14,6 @@ return {
             },
         },
         "saadparwaiz1/cmp_luasnip",
-        -- Optionnel : pour une meilleure navigation de fichiers
-        -- "nvim-telescope/telescope-file-browser.nvim",
     },
 
     event = { "InsertEnter", "CmdlineEnter" },
@@ -25,12 +22,11 @@ return {
         local cmp = require("cmp")
         local luasnip = require("luasnip")
         local types = require("luasnip.util.types")
-        --
+
         -- =================================================================
         -- CONFIGURATION LUASNIP
         -- =================================================================
 
-        -- Configuration de LuaSnip
         luasnip.config.set_config({
             history = true,
             updateevents = "TextChanged,TextChangedI",
@@ -39,8 +35,7 @@ return {
             ext_opts = {
                 [types.choiceNode] = {
                     active = {
-                        virt_text = { { " <- Choix actuel ", "Comment" } },
-                        -- Optionnel: surligner le choix actuel
+                        virt_text = { { " <- Choix actuel", "Comment" } },
                         hl_group = "Visual",
                     },
                     passive = {
@@ -49,10 +44,13 @@ return {
                 },
                 [types.insertNode] = {
                     active = {
-                        virt_text = { { " <- Tapez ici", "NonTest" } },
+                        virt_text = { { " <- Tapez ici", "Comment" } },
                     },
                 },
             },
+            -- AJOUT : active le mode de sélection visuelle pour les choiceNodes
+            region_check_events = "CursorMoved,CursorHold,InsertEnter",
+            store_selection_keys = "<Tab>",
         })
 
         -- Chargement des snippets
@@ -71,41 +69,13 @@ return {
                 end,
             },
             mapping = cmp.mapping.preset.insert({
-                -- Choix
                 ["<C-k>"] = cmp.mapping.select_prev_item(),
                 ["<C-j>"] = cmp.mapping.select_next_item(),
-                -- Deplacement dans la doc
                 ["<C-b>"] = cmp.mapping.scroll_docs(-4),
                 ["<C-f>"] = cmp.mapping.scroll_docs(4),
-                -- Complete
                 ["<C-Space>"] = cmp.mapping.complete(),
                 ["<C-e>"] = cmp.mapping.abort(),
                 ["<CR>"] = cmp.mapping.confirm({ select = true }),
-
-                -- Navigation spéciale pour les dossiers
-                ["<C-t>"] = cmp.mapping(function(fallback)
-                    local entry = cmp.get_selected_entry()
-                    if entry and entry.source.name == "path" then
-                        -- Si Telescope est disponible, l'utiliser
-                        local ok, _ = pcall(require, "telescope")
-                        if ok then
-                            local path = entry:get_completion_item().label
-                            -- Vérifier si c'est un dossier
-                            local stat = vim.loop.fs_stat(path)
-                            if stat and stat.type == "directory" then
-                                vim.cmd("Telescope file_browser path=" .. vim.fn.shellescape(path))
-                            else
-                                -- Si c'est un fichier, ouvrir le dossier parent
-                                local parent = vim.fn.fnamemodify(path, ":h")
-                                vim.cmd("Telescope file_browser path=" .. vim.fn.shellescape(parent))
-                            end
-                        else
-                            fallback()
-                        end
-                    else
-                        fallback()
-                    end
-                end, { "i" }),
 
                 ["<Tab>"] = cmp.mapping(function(fallback)
                     if cmp.visible() then
@@ -116,19 +86,21 @@ return {
                         fallback()
                     end
                 end, { "i", "s" }),
+
                 ["<S-Tab>"] = cmp.mapping(function(fallback)
                     if cmp.visible() then
                         cmp.select_prev_item()
-                    elseif require("luasnip").jumpable(-1) then
-                        require("luasnip").jump(-1)
+                    elseif luasnip.jumpable(-1) then
+                        luasnip.jump(-1)
                     else
                         fallback()
                     end
                 end, { "i", "s" }),
-                -- Mappings spécifiques pour les choice_node
+
+                -- MODIFICATION : Mappings pour naviguer dans les choiceNodes
                 ["<C-n>"] = cmp.mapping(function(fallback)
                     if luasnip.choice_active() then
-                        luasnip.change_choice(1) -- Choix suivant
+                        luasnip.change_choice(1)
                     else
                         fallback()
                     end
@@ -136,27 +108,24 @@ return {
 
                 ["<C-p>"] = cmp.mapping(function(fallback)
                     if luasnip.choice_active() then
-                        luasnip.change_choice(-1) -- Choix précédent
+                        luasnip.change_choice(-1)
                     else
                         fallback()
                     end
                 end, { "i", "s" }),
             }),
+
             sources = cmp.config.sources({
                 { name = "nvim_lsp", priority = 1000 },
                 { name = "luasnip", priority = 900, option = { show_autosnippets = true } },
-                -- { name = "nvim_lsp_signature_help" },
                 { name = "buffer", priority = 500 },
                 {
                     name = "path",
                     priority = 200,
                     option = {
-                        -- Affiche les fichiers cachés (optionnel)
                         show_hidden_files_by_default = false,
-                        -- Ajoute un slash pour les dossiers
                         trailing_slash = true,
                         label_trailing_slash = true,
-                        -- Fonction pour obtenir le répertoire de travail
                         get_cwd = function(params)
                             return vim.fn.expand(("#%d:p:h"):format(params.context.bufnr))
                         end,
@@ -164,12 +133,11 @@ return {
                 },
                 { name = "vimtex" },
             }),
-            -- Configuration pour éviter les doublons
+
             experimental = {
-                ghost_text = false, -- Désactive le texte fantôme si problématique
+                ghost_text = false,
             },
 
-            -- Filtrage des doublons
             duplicates = {
                 nvim_lsp = 1,
                 luasnip = 1,
@@ -177,11 +145,9 @@ return {
                 path = 1,
             },
 
-            -- Formatage des items dans le menu
             formatting = {
-                fields = { "abbr", "kind", "menu" }, -- Ordre d'affichage
+                fields = { "abbr", "kind", "menu" },
                 format = function(entry, vim_item)
-                    -- Ajouter des icônes pour identifier les sources
                     local kind_icons = {
                         Text = "󰉿",
                         Method = "󰆧",
@@ -210,16 +176,12 @@ return {
                         TypeParameter = "",
                     }
 
-                    -- Gestion spéciale pour les chemins de fichiers
                     if entry.source.name == "path" then
                         local item = entry:get_completion_item()
                         local path = item.label
-
-                        -- CORRECTION : Résoudre le chemin de manière plus robuste
                         local cwd = vim.fn.expand(("#%d:p:h"):format(vim.api.nvim_get_current_buf()))
                         local resolved_path = vim.fn.fnamemodify(cwd .. "/" .. path, ":p")
 
-                        -- Protection contre les erreurs de fs_stat
                         local stat = nil
                         local success, result = pcall(vim.loop.fs_stat, resolved_path)
                         if success then
@@ -229,7 +191,6 @@ return {
                         if stat and stat.type == "directory" then
                             vim_item.kind = "󰉋 Folder"
                             vim_item.menu = "[Dir]"
-                            -- Ajouter info sur le contenu du dossier avec protection d'erreur
                             local handle = vim.loop.fs_scandir(resolved_path)
                             if handle then
                                 local count = 0
@@ -237,7 +198,7 @@ return {
                                     count = count + 1
                                     if count > 10 then
                                         break
-                                    end -- Limiter le comptage
+                                    end
                                 end
                                 if count > 0 then
                                     vim_item.menu =
@@ -245,7 +206,6 @@ return {
                                 end
                             end
                         else
-                            -- C'est un fichier, détecter le type par extension
                             local ext = vim.fn.fnamemodify(path, ":e"):lower()
                             local file_icons = {
                                 lua = "󰢱",
@@ -263,22 +223,18 @@ return {
                                 gif = "󰋩",
                                 tex = "󰙩",
                             }
-
                             local file_icon = file_icons[ext] or "󰈙"
                             vim_item.kind = file_icon .. " File"
                             vim_item.menu = "[File]"
                         end
                     else
-                        -- Icône selon le type pour les autres sources
                         vim_item.kind = string.format("%s %s", kind_icons[vim_item.kind] or "", vim_item.kind)
-
                         if entry.completion_item.detail then
                             vim_item.menu = entry.completion_item.detail
                         else
                             local source_names = {
                                 luasnip = "[Snip]",
                                 nvim_lsp = "[LSP]",
-                                -- nvim_lsp_signature_help = "[Sig]",
                                 buffer = "[Buf]",
                                 path = "[Path]",
                                 vimtex = "[VimTeX]",
@@ -287,7 +243,6 @@ return {
                         end
                     end
 
-                    -- Limiter la longueur
                     if string.len(vim_item.abbr) > 50 then
                         vim_item.abbr = string.sub(vim_item.abbr, 1, 47) .. "..."
                     end
@@ -296,7 +251,6 @@ return {
                 end,
             },
 
-            -- Performance et filtrage
             performance = {
                 debounce = 60,
                 throttle = 30,
@@ -305,12 +259,13 @@ return {
                 async_budget = 1,
                 max_view_entries = 200,
             },
+
             window = {
                 completion = cmp.config.window.bordered(),
                 documentation = cmp.config.window.bordered(),
             },
         })
-        -- `/` complétion
+
         cmp.setup.cmdline("/", {
             mapping = cmp.mapping.preset.cmdline(),
             sources = {
@@ -318,7 +273,6 @@ return {
             },
         })
 
-        -- `:` complétion avec path amélioré
         cmp.setup.cmdline(":", {
             mapping = cmp.mapping.preset.cmdline(),
             sources = cmp.config.sources({
@@ -339,23 +293,114 @@ return {
             }),
         })
 
-        -- Mappings globaux utiles pour la navigation de fichiers
-        vim.keymap.set("n", "<leader>fb", function()
-            local ok, telescope = pcall(require, "telescope")
-            if ok then
-                vim.cmd("Telescope file_browser")
-            else
-                vim.cmd("edit .")
-            end
-        end, { desc = "File browser" })
+        -- AJOUT : Fenêtre flottante pour afficher les choiceNodes
+        local choice_popup = nil
+        local choice_popup_buffer = nil
 
-        vim.keymap.set("n", "<leader>fB", function()
-            local ok, telescope = pcall(require, "telescope")
-            if ok then
-                vim.cmd("Telescope file_browser path=%:p:h select_buffer=true")
-            else
-                vim.cmd("edit %:p:h")
+        local function show_choices_popup()
+            if not luasnip.choice_active() then
+                return
             end
-        end, { desc = "File browser (current directory)" })
+
+            local choices = luasnip.get_current_choices()
+            if not choices then
+                return
+            end
+
+            -- Fermer la fenêtre précédente si elle existe
+            if choice_popup and vim.api.nvim_win_is_valid(choice_popup) then
+                vim.api.nvim_win_close(choice_popup, true)
+            end
+
+            -- Créer le buffer
+            choice_popup_buffer = vim.api.nvim_create_buf(false, true)
+
+            -- Préparer les lignes avec numérotation
+            local lines = { "╭─ Choix disponibles ─╮" }
+            for idx, choice in ipairs(choices) do
+                local prefix = idx == 1 and "▶ " or "  "
+                table.insert(lines, string.format("%s%d. %s", prefix, idx, choice))
+            end
+            table.insert(lines, "╰──────────────────────╯")
+            table.insert(lines, "")
+            table.insert(lines, "Ctrl+n/p pour naviguer")
+
+            vim.api.nvim_buf_set_lines(choice_popup_buffer, 0, -1, false, lines)
+
+            -- Calculer la largeur
+            local width = 0
+            for _, line in ipairs(lines) do
+                width = math.max(width, vim.fn.strdisplaywidth(line))
+            end
+            width = math.min(width + 2, vim.o.columns - 4)
+
+            -- Position de la fenêtre (au-dessus du curseur)
+            local cursor_pos = vim.api.nvim_win_get_cursor(0)
+            local row = cursor_pos[1] - #lines - 1
+            if row < 0 then
+                row = cursor_pos[1] + 1 -- En dessous si pas de place au-dessus
+            end
+
+            -- Créer la fenêtre flottante
+            choice_popup = vim.api.nvim_open_win(choice_popup_buffer, false, {
+                relative = "win",
+                row = row,
+                col = 0,
+                width = width,
+                height = #lines,
+                style = "minimal",
+                border = "rounded",
+                focusable = false,
+                zindex = 50,
+            })
+
+            -- Styling
+            vim.api.nvim_win_set_option(choice_popup, "winblend", 10)
+            vim.api.nvim_buf_set_option(choice_popup_buffer, "modifiable", false)
+
+            -- Highlights
+            vim.api.nvim_buf_add_highlight(choice_popup_buffer, -1, "Title", 0, 0, -1)
+            vim.api.nvim_buf_add_highlight(choice_popup_buffer, -1, "Comment", #lines - 2, 0, -1)
+            for i = 1, #choices do
+                if i == 1 then
+                    vim.api.nvim_buf_add_highlight(choice_popup_buffer, -1, "String", i, 0, -1)
+                end
+            end
+
+            -- Fermer automatiquement après 3 secondes
+            vim.defer_fn(function()
+                if choice_popup and vim.api.nvim_win_is_valid(choice_popup) then
+                    vim.api.nvim_win_close(choice_popup, true)
+                end
+            end, 3000)
+        end
+
+        -- Fonction pour fermer la popup manuellement
+        local function close_choices_popup()
+            if choice_popup and vim.api.nvim_win_is_valid(choice_popup) then
+                vim.api.nvim_win_close(choice_popup, true)
+                choice_popup = nil
+            end
+        end
+
+        -- Keymap pour afficher la popup
+        vim.keymap.set({ "i", "s" }, "<C-l>", show_choices_popup, { desc = "Afficher les choix LuaSnip" })
+
+        -- Fermer la popup quand on change de choix
+        vim.keymap.set({ "i", "s" }, "<C-n>", function()
+            close_choices_popup()
+            if luasnip.choice_active() then
+                luasnip.change_choice(1)
+                vim.defer_fn(show_choices_popup, 50)
+            end
+        end, { desc = "Choix suivant" })
+
+        vim.keymap.set({ "i", "s" }, "<C-p>", function()
+            close_choices_popup()
+            if luasnip.choice_active() then
+                luasnip.change_choice(-1)
+                vim.defer_fn(show_choices_popup, 50)
+            end
+        end, { desc = "Choix précédent" })
     end,
 }
