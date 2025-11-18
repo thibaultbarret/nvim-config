@@ -3,6 +3,21 @@ return {
     event = "VeryLazy",
     priority = 1000,
     config = function()
+        -- Filtrer les diagnostics WARN pour les fichiers .tex avant qu'ils n'arrivent au plugin
+        local original_get = vim.diagnostic.get
+        vim.diagnostic.get = function(bufnr, opts)
+            local diagnostics = original_get(bufnr, opts)
+            local ft = vim.api.nvim_buf_get_option(bufnr or 0, "filetype")
+
+            if ft == "tex" then
+                return vim.tbl_filter(function(d)
+                    return d.severity ~= vim.diagnostic.severity.WARN
+                end, diagnostics)
+            end
+
+            return diagnostics
+        end
+
         require("tiny-inline-diagnostic").setup({
             preset = "modern",
             transparent_bg = false,
@@ -16,7 +31,6 @@ return {
                 background = "CursorLine",
                 mixing_color = "Normal",
             },
-            -- Notez: on ne désactive plus complètement .tex ici
             disabled_ft = {},
             options = {
                 show_source = {
@@ -29,7 +43,7 @@ return {
                 softwrap = 30,
                 add_messages = {
                     messages = true,
-                    display_count = false,
+                    display_count = true,
                     use_max_severity = false,
                     show_multiple_glyphs = true,
                 },
@@ -54,23 +68,9 @@ return {
                     enabled = false,
                     after = 30,
                 },
-                -- Fonction pour filtrer les diagnostics selon le filetype
-                format = function(diag)
-                    local ft = vim.bo.filetype
-                    -- Pour les fichiers .tex, ne rien retourner si c'est un warning
-                    if ft == "tex" and diag.severity == vim.diagnostic.severity.WARN then
-                        return ""
-                    end
-                    return diag.message
-                end,
+                format = nil,
                 virt_texts = {
                     priority = 2048,
-                },
-                severity = {
-                    vim.diagnostic.severity.ERROR,
-                    vim.diagnostic.severity.WARN,
-                    vim.diagnostic.severity.INFO,
-                    vim.diagnostic.severity.HINT,
                 },
                 overwrite_events = nil,
                 override_open_float = false,
