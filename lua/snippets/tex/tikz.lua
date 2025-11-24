@@ -105,4 +105,12 @@ return {
         t("}"),
         t({ "", "\\end{figure}" }),
     }),
+    -- Tikzpicture
+    s("tikzpicture", {
+        t("\\begin{tikzpicture}["),
+        i(1),
+        t({ "]", "    " }),
+        i(0),
+        t({ "", "\\end{tikzpicture}" }),
+    }),
 }

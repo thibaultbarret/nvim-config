@@ -11,6 +11,7 @@ return {
                 markdown = { "prettier" },
                 lua = { "stylua" },
                 python = { "ruff_format", "ruff_organize_imports" },
+                cpp = { "clang_format" },
                 sh = { "beautysh" },
                 bash = { "beautysh" },
                 zsh = { "beautysh" },

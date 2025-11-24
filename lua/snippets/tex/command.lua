@@ -148,4 +148,13 @@ return { -- Snippet pour \input{}
         t("\\xspace}"),
         t({ "", "" }),
     }),
+    -- newmathcommand
+    s("newmathcommand", {
+        t("\\newcommand{\\"),
+        i(1, "command name"),
+        t("}{\\ensuremath{"),
+        i(2, "command"),
+        t("}\\xspace}"),
+        t({ "", "" }),
+    }),
 }
