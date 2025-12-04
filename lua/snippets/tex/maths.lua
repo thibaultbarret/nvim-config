@@ -10,7 +10,7 @@ local rep = require("luasnip.extras").rep
 return {
     -- Equation
     s("equ", {
-        t("\\begin{equation} %"),
+        t("\\begin{equation} % "),
         i(1),
         t({ "", "    " }),
         i(0),
@@ -62,5 +62,15 @@ return {
         t("\\left\\[ "),
         i(0),
         t(" \\right\\]"),
+    }),
+    -- Power 2
+    s("p2", {
+        t("^{2} "),
+    }),
+    -- Power
+    s("pow", {
+        t("^{ "),
+        i(0),
+        t("} "),
     }),
 }

@@ -25,7 +25,7 @@ return {
                         corner = "└",
                         none = " ",
                         edge = "│",
-                        item = "├",
+                        item = "│",
                         bottom = "─",
                     },
                 },
@@ -53,7 +53,7 @@ return {
                 },
             },
             git = {
-                enable = false, -- Ajoutez cette section
+                enable = true, -- Ajoutez cette section
             },
             on_attach = function(bufnr)
                 local api = require("nvim-tree.api")
