@@ -1,4 +1,5 @@
 vim.g.mapleader = " "
+--
 -- Récupérer les attributs de CursorLine et les appliquer à CursorColumn
 vim.api.nvim_create_autocmd("ColorScheme", {
     callback = function()
@@ -23,6 +24,10 @@ opt.cursorcolumn = true
 -- Prise en compte de l'underscore et du colon comme separateur de mots
 opt.iskeyword:remove("_")
 opt.iskeyword:remove(":")
+
+-- Fond
+vim.opt.termguicolors = true
+vim.opt.background = "dark"
 
 -- Indentation
 opt.tabstop = 4

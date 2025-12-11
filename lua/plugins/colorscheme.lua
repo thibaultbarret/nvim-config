@@ -9,8 +9,8 @@ return {
 
             -- === CONFIGURATION DE BASE POUR FIRACODE ===
             -- Ces paramètres assurent que toutes les capacités typographiques sont activées
-            no_italic = false,    -- CRUCIAL : Active l'italique
-            no_bold = false,      -- Active le gras
+            no_italic = false, -- CRUCIAL : Active l'italique
+            no_bold = false, -- Active le gras
             no_underline = false, -- Active le soulignement
 
             -- Paramètres de compilation pour optimiser les performances avec FiraCode
@@ -91,7 +91,7 @@ return {
                         fg = colors.overlay1,
                         italic = true,
                         -- Assurance supplémentaire pour l'italique
-                        cterm = { italic = true }
+                        cterm = { italic = true },
                     },
 
                     -- Commentaires spéciaux avec un impact visuel fort
@@ -99,25 +99,25 @@ return {
                         fg = colors.base,
                         bg = colors.yellow,
                         bold = true,
-                        italic = true -- TODO en gras-italique se démarque parfaitement
+                        italic = true, -- TODO en gras-italique se démarque parfaitement
                     },
                     ["@comment.warning"] = {
                         fg = colors.base,
                         bg = colors.peach,
                         bold = true,
-                        italic = true
+                        italic = true,
                     },
                     ["@comment.note"] = {
                         fg = colors.base,
                         bg = colors.blue,
                         bold = true,
-                        italic = true
+                        italic = true,
                     },
                     ["@comment.error"] = {
                         fg = colors.base,
                         bg = colors.red,
                         bold = true,
-                        italic = true
+                        italic = true,
                     },
 
                     -- === FONCTIONS ET MÉTHODES ===
@@ -126,7 +126,7 @@ return {
                     ["@function.builtin"] = {
                         fg = colors.peach,
                         bold = true,
-                        italic = true -- Fonctions built-in distinctes
+                        italic = true, -- Fonctions built-in distinctes
                     },
                     ["@method"] = { fg = colors.blue, bold = true },
                     ["@method.call"] = { fg = colors.blue, bold = true },
@@ -143,19 +143,19 @@ return {
                     ["@variable"] = { fg = colors.text },
                     ["@variable.builtin"] = {
                         fg = colors.red,
-                        italic = true -- Variables spéciales en italique
+                        italic = true, -- Variables spéciales en italique
                     },
                     ["@parameter"] = {
                         fg = colors.maroon,
-                        italic = true -- Paramètres de fonction en italique
+                        italic = true, -- Paramètres de fonction en italique
                     },
                     ["@field"] = {
                         fg = colors.teal,
-                        italic = true -- Champs d'objet en italique
+                        italic = true, -- Champs d'objet en italique
                     },
                     ["@property"] = {
                         fg = colors.teal,
-                        italic = true -- Propriétés en italique
+                        italic = true, -- Propriétés en italique
                     },
 
                     -- === MOTS-CLÉS ET CONTRÔLE DE FLUX ===
@@ -164,44 +164,44 @@ return {
                     ["@keyword.function"] = {
                         fg = colors.mauve,
                         bold = true,
-                        italic = true
+                        italic = true,
                     },
                     ["@keyword.return"] = {
                         fg = colors.pink,
                         bold = true,
-                        italic = true -- return se démarque bien
+                        italic = true, -- return se démarque bien
                     },
 
                     -- Contrôle de flux : parfait avec les ligatures (=>, >=, etc.)
                     ["@conditional"] = {
                         fg = colors.mauve,
                         bold = true,
-                        italic = true -- if/else très distinctifs
+                        italic = true, -- if/else très distinctifs
                     },
                     ["@repeat"] = {
                         fg = colors.mauve,
                         bold = true,
-                        italic = true -- for/while se démarquent
+                        italic = true, -- for/while se démarquent
                     },
                     ["@exception"] = {
                         fg = colors.red,
                         bold = true,
-                        italic = true -- try/catch/throw très visibles
+                        italic = true, -- try/catch/throw très visibles
                     },
 
                     -- === LITTÉRAUX ET CONSTANTES ===
                     -- Les chaînes bénéficient énormément de l'italique FiraCode
                     ["@string"] = {
                         fg = colors.green,
-                        italic = true -- Strings très lisibles en italique
+                        italic = true, -- Strings très lisibles en italique
                     },
                     ["@string.escape"] = {
                         fg = colors.pink,
-                        bold = true -- Échappements techniques en gras
+                        bold = true, -- Échappements techniques en gras
                     },
                     ["@string.regex"] = {
                         fg = colors.peach,
-                        italic = true -- Regex en italique pour les distinguer
+                        italic = true, -- Regex en italique pour les distinguer
                     },
 
                     -- Nombres : excellent rendu avec les ligatures numériques
@@ -210,31 +210,31 @@ return {
                     ["@boolean"] = {
                         fg = colors.peach,
                         bold = true,
-                        italic = true -- true/false très distinctifs
+                        italic = true, -- true/false très distinctifs
                     },
                     ["@constant"] = { fg = colors.peach, bold = true },
                     ["@constant.builtin"] = {
                         fg = colors.peach,
                         bold = true,
-                        italic = true
+                        italic = true,
                     },
 
                     -- === OPÉRATEURS ET PONCTUATION ===
                     -- Ces éléments sont transformés par les ligatures FiraCode
                     ["@operator"] = {
                         fg = colors.sky,
-                        bold = true -- Opérateurs en gras pour les ligatures
+                        bold = true, -- Opérateurs en gras pour les ligatures
                     },
                     ["@punctuation.bracket"] = {
                         fg = colors.overlay2,
-                        bold = true -- Brackets bien visibles
+                        bold = true, -- Brackets bien visibles
                     },
                     ["@punctuation.delimiter"] = {
-                        fg = colors.overlay2
+                        fg = colors.overlay2,
                     },
                     ["@punctuation.special"] = {
                         fg = colors.sky,
-                        bold = true -- Ponctuation spéciale (=>, <-, etc.)
+                        bold = true, -- Ponctuation spéciale (=>, <-, etc.)
                     },
 
                     -- === IMPORTS ET MODULES ===
@@ -242,11 +242,11 @@ return {
                     ["@include"] = {
                         fg = colors.pink,
                         bold = true,
-                        italic = true -- import/include très visibles
+                        italic = true, -- import/include très visibles
                     },
                     ["@namespace"] = {
                         fg = colors.yellow,
-                        italic = true -- Namespaces en italique
+                        italic = true, -- Namespaces en italique
                     },
 
                     -- === SPÉCIFIQUE PYTHON ===
@@ -254,23 +254,23 @@ return {
                     ["@keyword.import"] = {
                         fg = colors.pink,
                         bold = true,
-                        italic = true
+                        italic = true,
                     },
                     ["@keyword.from"] = {
                         fg = colors.pink,
                         bold = true,
-                        italic = true
+                        italic = true,
                     },
 
                     -- Décorateurs Python : parfaits en gras-italique
                     ["@decorator"] = {
                         fg = colors.yellow,
                         bold = true,
-                        italic = true -- @decorator très distinctif
+                        italic = true, -- @decorator très distinctif
                     },
                     ["@attribute"] = {
                         fg = colors.yellow,
-                        italic = true
+                        italic = true,
                     },
 
                     -- === ÉLÉMENTS MARKDOWN ===
@@ -291,19 +291,19 @@ return {
                     -- Optimisés pour une lecture rapide avec FiraCode
                     ["DiagnosticError"] = {
                         fg = colors.red,
-                        bold = true
+                        bold = true,
                     },
                     ["DiagnosticWarn"] = {
                         fg = colors.yellow,
-                        bold = true
+                        bold = true,
                     },
                     ["DiagnosticInfo"] = {
                         fg = colors.blue,
-                        italic = true
+                        italic = true,
                     },
                     ["DiagnosticHint"] = {
                         fg = colors.teal,
-                        italic = true
+                        italic = true,
                     },
 
                     -- === ÉLÉMENTS SPÉCIAUX FIRACODE ===
@@ -312,19 +312,19 @@ return {
                     -- Flèches et opérateurs de transformation (=>, ->, etc.)
                     ["FiraCodeArrow"] = {
                         fg = colors.sky,
-                        bold = true
+                        bold = true,
                     },
 
                     -- Opérateurs de comparaison (>=, <=, ==, !=)
                     ["FiraCodeComparison"] = {
                         fg = colors.mauve,
-                        bold = true
+                        bold = true,
                     },
 
                     -- Opérateurs logiques (&&, ||, etc.)
                     ["FiraCodeLogical"] = {
                         fg = colors.red,
-                        bold = true
+                        bold = true,
                     },
 
                     -- === OPTIMISATIONS TELESCOPE ===
@@ -332,30 +332,30 @@ return {
                     ["TelescopeSelection"] = {
                         fg = colors.text,
                         bg = colors.surface0,
-                        bold = true
+                        bold = true,
                     },
                     ["TelescopeMatching"] = {
                         fg = colors.blue,
-                        bold = true
+                        bold = true,
                     },
 
                     -- === OPTIMISATIONS NVIM-TREE ===
                     -- Les icônes Nerd Font s'harmonisent parfaitement
                     ["NvimTreeFolderName"] = {
                         fg = colors.blue,
-                        bold = true
+                        bold = true,
                     },
                     ["NvimTreeOpenedFolderName"] = {
                         fg = colors.blue,
                         bold = true,
-                        italic = true
+                        italic = true,
                     },
                     ["NvimTreeFileName"] = {
-                        fg = colors.text
+                        fg = colors.text,
                     },
                     ["NvimTreeExecutableFile"] = {
                         fg = colors.green,
-                        bold = true
+                        bold = true,
                     },
                 }
             end,
@@ -386,7 +386,7 @@ return {
                 vim.api.nvim_set_hl(0, "FiraCodeTest", {
                     fg = colors.sapphire,
                     bold = true,
-                    italic = true
+                    italic = true,
                 })
 
                 -- Message de confirmation
