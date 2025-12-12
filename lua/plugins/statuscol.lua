@@ -1,8 +1,9 @@
 return {
     "luukvbaal/statuscol.nvim",
     config = function()
-        -- Définir la couleur orange de Catppuccin Mocha et gras pour la ligne courante
         vim.api.nvim_set_hl(0, "MyCurrentLine", { fg = "#FAB387", bold = true })
+        -- Définir le bleu de Catppuccin Mocha pour les numéros relatifs
+        vim.api.nvim_set_hl(0, "MyRelativeNumber", { fg = "#89B4FA" })
 
         -- Custom function to show both absolute and relative line numbers
         local function lnum_both()
@@ -32,9 +33,12 @@ return {
                 end
             end
 
-            -- Appliquer l'orange pour la ligne courante, LineNr par défaut pour les autres
-            local hl = vim.v.lnum == current and "%#MyCurrentLine#" or "%#LineNr#"
-            return hl .. string.format("%3d %2d", lnum, relnum)
+            -- Numéro absolu en orange pour la ligne courante, sinon couleur par défaut
+            local hl_abs = vim.v.lnum == current and "%#MyCurrentLine#" or "%#LineNr#"
+            -- Numéro relatif en bleu
+            local hl_rel = "%#MyRelativeNumber#"
+
+            return hl_abs .. string.format("%3d ", lnum) .. hl_rel .. string.format("%2d", relnum)
         end
 
         require("statuscol").setup({
