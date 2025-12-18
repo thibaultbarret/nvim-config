@@ -84,6 +84,8 @@ map("i", "<C-m>", function()
     vim.fn.feedkeys(vim.fn["copilot#Accept"](), "")
 end, { desc = "Copilot Accept", noremap = true, silent = true })
 
+map("t", "<C-;>", "<C-\\><C-n>", { desc = "Sortir du terminal" })
+
 -- Remplacer le mot sous le curseur sur la ligne
 -- map("n", "rel", function()
 -- 	-- Copie le mot sous le curseur

@@ -63,6 +63,8 @@ return {
                     click = "v:lua.ScLa",
                 },
             },
+            ft_ignore = { "neominimap", "NvimTree", "neo-tree", "toggleterm", "Trouble" },
+            bt_ignore = { "nofile", "terminal" },
         })
     end,
 }
