@@ -6,6 +6,10 @@ local i = ls.insert_node
 local c = ls.choice_node
 local f = ls.function_node
 local rep = require("luasnip.extras").rep
+local ls = require("luasnip")
+local d = ls.dynamic_node
+local sn = ls.snippet_node
+local fmt = require("luasnip.extras.fmt").fmt
 
 return {
     -- line cap
@@ -112,5 +116,41 @@ return {
         t({ "]", "    " }),
         i(0),
         t({ "", "\\end{tikzpicture}" }),
+    }),
+    -- Coordinate frame
+    s("coordframe", {
+        -- t("% Coordinate frame"),
+        t({ "% Coordinate frame", "\\draw [" }),
+        i(2),
+        t("] (0, 0) -- ("),
+        i(1),
+        t(", 0) ;", ""),
+        t({ "", "\\draw [" }),
+        rep(2),
+        t("] (0, 0) -- (0, "),
+        rep(1),
+        t({ ") ;", "" }),
+        i(0),
+    }),
+    --
+    s("draw", {
+        t("\\draw ["),
+        i(1, ""),
+        t("] ("),
+        i(2, "0"),
+        t(", "),
+        i(3, "0"),
+        t(") "),
+        i(0),
+        t(";"),
+    }),
+    --
+    s("--", {
+        t(" -- ("),
+        i(1, "x"),
+        t(", "),
+        i(2, "y"),
+        t(")"),
+        i(0),
     }),
 }

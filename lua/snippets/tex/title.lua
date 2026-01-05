@@ -113,7 +113,7 @@ return {
         f(sanitize_label, { 1 }),
         t("}"),
     }),
-    -- #
+    -- Subsubsection:
     s("subsubsection", {
         t("\\subsubsection{"),
         i(1),

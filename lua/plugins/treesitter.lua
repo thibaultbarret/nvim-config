@@ -5,7 +5,7 @@ return {
     build = ":TSUpdate",
     config = function()
         require("nvim-treesitter.configs").setup({
-            highlight = { enable = true, additional_vim_regex_highlighting = false },
+            highlight = { enable = true, disable = {} },
             indent = { enable = true },
             ensure_installed = {
                 "bash",
@@ -16,6 +16,9 @@ return {
                 "gitignore",
                 "cpp",
                 "c",
+                "javascript",
+                "json",
+                -- "biblatex",
             },
         })
     end,
