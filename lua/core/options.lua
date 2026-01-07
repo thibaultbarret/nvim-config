@@ -1,4 +1,5 @@
 vim.g.mapleader = " "
+local opt = vim.opt
 --
 -- Récupérer les attributs de CursorLine et les appliquer à CursorColumn
 vim.api.nvim_create_autocmd("ColorScheme", {
@@ -11,8 +12,15 @@ vim.api.nvim_create_autocmd("ColorScheme", {
 -- Appliquer immédiatement
 local cursorline_hl = vim.api.nvim_get_hl(0, { name = "CursorLine" })
 vim.api.nvim_set_hl(0, "CursorColumn", cursorline_hl)
-local opt = vim.opt
 
+-- Line break
+
+opt.wrap = true -- Active le retour à la ligne visuel
+-- opt.linebreak = true -- Coupe aux espaces plutôt qu'au milieu d'un mot
+opt.breakindent = true
+opt.showbreak = "󰘍 "
+
+--
 -- Numero des lignes
 opt.number = true
 opt.relativenumber = true

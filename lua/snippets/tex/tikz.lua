@@ -132,7 +132,7 @@ return {
         t({ ") ;", "" }),
         i(0),
     }),
-    --
+    -- draw
     s("draw", {
         t("\\draw ["),
         i(1, ""),
@@ -150,7 +150,47 @@ return {
         i(1, "x"),
         t(", "),
         i(2, "y"),
-        t(")"),
+        t(") "),
         i(0),
+    }),
+    -- scope
+    s("scope", {
+        t({ "\\begin{scope}[" }),
+        i(1),
+        -- t("]", ""),
+        t({ "]", "    " }),
+        -- t({ "" }),
+        i(0),
+        t({ "", "\\end{scope}" }),
+    }),
+    -- xshift
+    s("xshift", {
+        t("xshift = "),
+        i(1),
+        t(" cm, "),
+        i(0),
+    }),
+    -- yshift
+    s("yshift", {
+        t("yshift = "),
+        i(1),
+        t(" cm, "),
+        i(0),
+    }),
+    -- shift
+    s("shift", {
+        t("shift = {("),
+        i(1),
+        t(" ,"),
+        i(2),
+        t(")}"),
+    }),
+    -- polar shift
+    s("pshift", {
+        t("shift = {("),
+        i(1, "angle"),
+        t(" :"),
+        i(2, "radius"),
+        t(")}"),
     }),
 }

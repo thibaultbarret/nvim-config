@@ -29,7 +29,6 @@ return {
         { "<leader>ns", "<cmd>Neominimap ToggleFocus<cr>", desc = "Switch focus on minimap" },
     },
     init = function()
-        vim.opt.wrap = false
         vim.opt.sidescrolloff = 35
         -- vim.opt.scrolloff = 999
 

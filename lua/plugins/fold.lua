@@ -2,230 +2,94 @@ return {
     "kevinhwang91/nvim-ufo",
     dependencies = {
         "kevinhwang91/promise-async",
-        "luukvbaal/statuscol.nvim", -- Optionnel mais améliore l'affichage
+        "luukvbaal/statuscol.nvim",
     },
     event = "BufReadPost",
     config = function()
-        -- Configuration des options de fold
-        vim.o.foldcolumn = "1" -- Colonne pour les indicateurs de fold
-        vim.o.foldlevel = 99 -- Niveau de fold initial (tout ouvert)
+        ----------------------------------------------------------------------
+        -- Options générales
+        ----------------------------------------------------------------------
+        vim.o.foldcolumn = "1"
+        vim.o.foldlevel = 99
         vim.o.foldlevelstart = 99
         vim.o.foldenable = true
 
-        -- Fonction personnalisée pour détecter les Literal[] et Union[] en Python
+        ----------------------------------------------------------------------
+        -- ========================= PYTHON PROVIDERS ========================
+        ----------------------------------------------------------------------
+
+        -- Literal[] / Union[]
         local function python_literal_provider(bufnr)
             local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-            local folds = {}
-            local i = 1
+            local folds, i = {}, 1
 
             while i <= #lines do
                 local line = lines[i]
-                -- Détecte les patterns Literal[] ou Union[] avec gestion des multilignes
-                local pattern_type = nil
-                if line:match("Literal%s*%[") then
-                    pattern_type = "literal"
-                elseif line:match("Union%s*%[") then
-                    pattern_type = "union"
-                end
+                local kind = line:match("Literal%s*%[") and "literal" or line:match("Union%s*%[") and "union"
 
-                if pattern_type then
-                    local start_line = i - 1 -- 0-indexé pour nvim-ufo
-                    local bracket_count = 0
-                    local in_string = false
-                    local string_char = nil
-                    local j = i
+                if kind then
+                    local start_line = i - 1
+                    local count, j = 0, i
 
-                    -- Compte les crochets ouvrants et fermants pour gérer le multiligne
                     while j <= #lines do
-                        local current_line = lines[j]
-                        local pos = 1
-
-                        while pos <= #current_line do
-                            local char = current_line:sub(pos, pos)
-
-                            -- Gestion des chaînes de caractères
-                            if not in_string and (char == '"' or char == "'") then
-                                in_string = true
-                                string_char = char
-                            elseif in_string and char == string_char then
-                                -- Vérifier si ce n'est pas échappé
-                                local escape_count = 0
-                                local check_pos = pos - 1
-                                while check_pos > 0 and current_line:sub(check_pos, check_pos) == "\\" do
-                                    escape_count = escape_count + 1
-                                    check_pos = check_pos - 1
-                                end
-                                if escape_count % 2 == 0 then
-                                    in_string = false
-                                    string_char = nil
-                                end
-                            end
-
-                            -- Ne compter les crochets que si on n'est pas dans une chaîne
-                            if not in_string then
-                                if char == "[" then
-                                    bracket_count = bracket_count + 1
-                                elseif char == "]" then
-                                    bracket_count = bracket_count - 1
-                                    if bracket_count == 0 then
-                                        -- Fin du Literal/Union trouvée
-                                        table.insert(folds, {
-                                            startLine = start_line,
-                                            endLine = j - 1, -- 0-indexé
-                                            kind = pattern_type,
-                                        })
-                                        i = j
-                                        goto continue
-                                    end
-                                end
-                            end
-
-                            pos = pos + 1
+                        for c in lines[j]:gmatch("[%[%]]") do
+                            count = count + (c == "[" and 1 or -1)
                         end
-
-                        -- Reset string state at end of line if not closed
-                        if in_string then
-                            in_string = false
-                            string_char = nil
+                        if count == 0 and j > i then
+                            table.insert(folds, {
+                                startLine = start_line,
+                                endLine = j - 1,
+                                kind = kind,
+                            })
+                            i = j
+                            goto continue
                         end
-
                         j = j + 1
-
-                        -- Protection contre les boucles infinies (augmentée pour les gros Union)
-                        if j - i > 200 then
-                            break
-                        end
                     end
-
-                    ::continue::
                 end
+                ::continue::
                 i = i + 1
             end
-
             return folds
         end
 
-        -- Fonction personnalisée pour détecter les attributs de classe Python
+        -- Class attributes
         local function python_class_attributes_provider(bufnr)
             local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-            local folds = {}
-            local i = 1
+            local folds, i = {}, 1
 
             while i <= #lines do
-                local line = lines[i]
-
-                -- Détecte le début d'une classe
-                if line:match("^class%s+") then
+                if lines[i]:match("^class%s+") then
+                    local base_indent
+                    local start, finish
                     local j = i + 1
-                    local attributes_start = nil
-                    local attributes_end = nil
-                    local base_indent = nil
-                    local in_docstring = false
-                    local docstring_delimiter = nil
 
-                    -- Cherche les attributs dans la classe
                     while j <= #lines do
-                        local current_line = lines[j]
+                        local line = lines[j]
 
-                        -- Gestion des docstrings
-                        if not in_docstring then
-                            local triple_quote = current_line:match('"""') or current_line:match("'''")
-                            if triple_quote then
-                                docstring_delimiter = triple_quote == '"""' and '"""' or "'''"
-                                in_docstring = true
-                                -- Check if docstring ends on same line
-                                local rest_of_line = current_line:match(docstring_delimiter .. "(.*)")
-                                if rest_of_line and rest_of_line:match(docstring_delimiter) then
-                                    in_docstring = false
-                                end
+                        if not (line:match("^%s*$") or line:match("^%s*#")) then
+                            local indent = #(line:match("^(%s*)") or "")
+                            base_indent = base_indent or indent
+
+                            if indent < base_indent then
+                                break
                             end
-                        elseif current_line:match(docstring_delimiter) then
-                            in_docstring = false
-                        end
 
-                        -- Skip si on est dans un docstring
-                        if in_docstring then
-                            j = j + 1
-                            goto continue_search
-                        end
-
-                        -- Skip les lignes vides et les commentaires
-                        if current_line:match("^%s*$") or current_line:match("^%s*#") then
-                            j = j + 1
-                            goto continue_search
-                        end
-
-                        -- Détermine l'indentation de base de la classe
-                        if not base_indent then
-                            local indent = current_line:match("^(%s*)")
-                            if #indent > 0 then
-                                base_indent = #indent
-                            else
-                                j = j + 1
-                                goto continue_search
-                            end
-                        end
-
-                        -- Vérifier si on est toujours dans la classe
-                        local current_indent = current_line:match("^(%s*)")
-                        if #current_indent < base_indent then
-                            -- On est sorti de la classe
-                            break
-                        elseif #current_indent == base_indent then
-                            -- Même niveau d'indentation que la classe - on cherche les attributs
-
-                            -- Attributs avec underscores, types complexes
-                            local is_attribute = current_line:match("^%s+[%w_]+%s*:")
-                                or current_line:match("^%s+[%w_]+%s*=")
-
-                            -- Méthodes et autres constructs à ignorer
-                            local is_method_or_other = current_line:match("^%s+def%s")
-                                or current_line:match("^%s+class%s")
-                                or current_line:match("^%s+@")
-                                or current_line:match("^%s+if%s")
-                                or current_line:match("^%s+for%s")
-                                or current_line:match("^%s+while%s")
-                                or current_line:match("^%s+with%s")
-                                or current_line:match("^%s+try%s")
-                                or current_line:match("^%s+async%s+def%s")
-                                or current_line:match("^%s+property%s")
-
-                            if is_attribute and not is_method_or_other then
-                                if not attributes_start then
-                                    attributes_start = j - 1 -- 0-indexé
-                                end
-                                -- Continue à étendre la fin tant qu'on trouve des attributs
-                                attributes_end = j - 1
-                            elseif attributes_start then
-                                -- On a des attributs et on rencontre autre chose
-                                if is_method_or_other then
-                                    -- C'est une méthode, on termine le fold des attributs
-                                    if attributes_end and attributes_end > attributes_start then
-                                        table.insert(folds, {
-                                            startLine = attributes_start,
-                                            endLine = attributes_end,
-                                            kind = "attributes",
-                                        })
-                                    end
-                                    break
-                                end
-                                -- Sinon on continue (peut-être une ligne vide ou un commentaire)
+                            if indent == base_indent and line:match("^%s+[%w_]+%s*[:=]") then
+                                start = start or (j - 1)
+                                finish = j - 1
+                            elseif start then
+                                break
                             end
                         end
 
                         j = j + 1
-                        if j - i > 100 then
-                            break
-                        end -- Protection
-
-                        ::continue_search::
                     end
 
-                    -- Ajouter le fold si on arrive à la fin avec des attributs
-                    if attributes_start and attributes_end and attributes_end > attributes_start then
+                    if start and finish and finish > start then
                         table.insert(folds, {
-                            startLine = attributes_start,
-                            endLine = attributes_end,
+                            startLine = start,
+                            endLine = finish,
                             kind = "attributes",
                         })
                     end
@@ -239,488 +103,405 @@ return {
             return folds
         end
 
-        -- Fonction personnalisée pour détecter les groupes @overload en Python
+        -- @overload groups
         local function python_overload_provider(bufnr)
             local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-            local folds = {}
-            local i = 1
+            local folds, i = {}, 1
 
             while i <= #lines do
-                local line = lines[i]
-
-                -- Détecte le début d'un groupe @overload
-                if line:match("^%s*@overload%s*$") then
-                    local overload_start = i - 1 -- 0-indexé
-                    local base_indent = line:match("^(%s*)")
-                    local j = i
-                    local last_overload_end = nil
-
-                    -- Cherche tous les overloads consécutifs
-                    while j <= #lines do
-                        local current_line = lines[j]
-
-                        -- Skip les lignes vides et commentaires
-                        if current_line:match("^%s*$") or current_line:match("^%s*#") then
-                            j = j + 1
-                            goto continue_overload
-                        end
-
-                        local current_indent = current_line:match("^(%s*)")
-
-                        -- Si l'indentation est différente du niveau de base, on continue
-                        if #current_indent ~= #base_indent then
-                            j = j + 1
-                            goto continue_overload
-                        end
-
-                        -- Vérifie si c'est un autre @overload
-                        if current_line:match("^%s*@overload%s*$") then
-                            -- Trouve la fin de ce @overload (sa fonction def associée)
-                            local k = j + 1
-                            while k <= #lines do
-                                local overload_line = lines[k]
-
-                                if overload_line:match("^%s*$") or overload_line:match("^%s*#") then
-                                    k = k + 1
-                                    goto continue_overload_search
-                                end
-
-                                -- Si on trouve la définition de fonction pour cet overload
-                                if overload_line:match("^%s*def%s+") then
-                                    -- Trouve la fin de cette définition (en gros jusqu'à "..." ou fin de params)
-                                    while k <= #lines do
-                                        local def_line = lines[k]
-                                        if def_line:match("%.%.%.") or def_line:match("->.*:") then
-                                            last_overload_end = k - 1 -- 0-indexé
-                                            break
-                                        end
-                                        k = k + 1
-                                        if k - j > 20 then
-                                            break
-                                        end -- Protection
-                                    end
-                                    break
-                                end
-
-                                k = k + 1
-                                if k - j > 20 then
-                                    break
-                                end -- Protection
-
-                                ::continue_overload_search::
-                            end
-
-                            j = k + 1
-                            goto continue_overload
-                        end
-
-                        -- Vérifie si c'est une définition de fonction sans @overload
-                        if current_line:match("^%s*def%s+") then
-                            -- C'est probablement l'implémentation finale, on s'arrête
-                            break
-                        end
-
-                        -- Si on rencontre autre chose qu'un @overload ou def à ce niveau, on s'arrête
-                        if not current_line:match("^%s*@") then
-                            break
-                        end
-
+                if lines[i]:match("^%s*@overload%s*$") then
+                    local start = i - 1
+                    local j = i + 1
+                    while j <= #lines and not lines[j]:match("^%s*def%s+") do
                         j = j + 1
-
-                        -- Protection contre les boucles infinies
-                        if j - i > 200 then
-                            break
-                        end
-
-                        ::continue_overload::
                     end
-
-                    -- Si on a trouvé au moins un overload complet, on crée le fold
-                    if last_overload_end and last_overload_end > overload_start then
+                    if j - 2 > start then
                         table.insert(folds, {
-                            startLine = overload_start,
-                            endLine = last_overload_end,
+                            startLine = start,
+                            endLine = j - 2,
                             kind = "overload",
                         })
-                        i = j
-                    else
-                        i = i + 1
                     end
-                else
-                    i = i + 1
-                end
-            end
-
-            return folds
-        end
-
-        -- Fonction personnalisée pour détecter les blocs case dans match statements Python
-        local function python_match_case_provider(bufnr)
-            local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-            local folds = {}
-            local i = 1
-
-            while i <= #lines do
-                local line = lines[i]
-
-                -- Détecte un statement match
-                if line:match("^%s*match%s+") then
-                    local j = i + 1
-                    local match_indent = line:match("^(%s*)")
-
-                    -- Cherche les blocs case dans ce match
-                    while j <= #lines do
-                        local current_line = lines[j]
-
-                        -- Skip les lignes vides et commentaires
-                        if current_line:match("^%s*$") or current_line:match("^%s*#") then
-                            j = j + 1
-                            goto continue_match
-                        end
-
-                        local current_indent = current_line:match("^(%s*)")
-
-                        -- Si on sort du bloc match (indentation égale ou moindre)
-                        if #current_indent <= #match_indent then
-                            break
-                        end
-
-                        -- Détecte un bloc case
-                        if current_line:match("^%s*case%s+") then
-                            local case_start = j - 1 -- 0-indexé
-                            local case_indent = current_indent
-                            local k = j + 1
-                            local case_end = j - 1
-
-                            -- Trouve la fin du bloc case
-                            while k <= #lines do
-                                local case_line = lines[k]
-
-                                -- Skip les lignes vides
-                                if case_line:match("^%s*$") then
-                                    k = k + 1
-                                    goto continue_case
-                                end
-
-                                local case_line_indent = case_line:match("^(%s*)")
-
-                                -- Si on rencontre un autre case ou on sort du match
-                                if
-                                    #case_line_indent <= #case_indent
-                                    and (case_line:match("^%s*case%s+") or #case_line_indent <= #match_indent)
-                                then
-                                    break
-                                end
-
-                                -- Si la ligne est plus indentée ou au même niveau que le contenu du case
-                                if #case_line_indent > #case_indent or case_line:match("^%s*#") then
-                                    case_end = k - 1
-                                end
-
-                                k = k + 1
-
-                                -- Protection
-                                if k - j > 100 then
-                                    break
-                                end
-
-                                ::continue_case::
-                            end
-
-                            -- Créer le fold pour ce case si il a du contenu
-                            if case_end > case_start then
-                                table.insert(folds, {
-                                    startLine = case_start,
-                                    endLine = case_end,
-                                    kind = "case",
-                                })
-                            end
-
-                            j = k
-                        else
-                            j = j + 1
-                        end
-
-                        -- Protection
-                        if j - i > 200 then
-                            break
-                        end
-
-                        ::continue_match::
-                    end
-
                     i = j
                 else
                     i = i + 1
                 end
             end
-
             return folds
         end
 
-        -- Fonction personnalisée pour détecter les accolades dans les fichiers .tex
-        local function tex_braces_provider(bufnr)
+        -- match / case
+        local function python_match_case_provider(bufnr)
+            local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+            local folds, i = {}, 1
+
+            while i <= #lines do
+                if lines[i]:match("^%s*match%s+") then
+                    local base_indent = #(lines[i]:match("^(%s*)") or "")
+                    local j = i + 1
+
+                    while j <= #lines do
+                        local indent = #(lines[j]:match("^(%s*)") or "")
+                        if indent <= base_indent then
+                            break
+                        end
+
+                        if lines[j]:match("^%s*case%s+") then
+                            local start = j - 1
+                            local k = j + 1
+                            while k <= #lines and #(lines[k]:match("^(%s*)") or "") > indent do
+                                k = k + 1
+                            end
+                            if k - 2 > start then
+                                table.insert(folds, {
+                                    startLine = start,
+                                    endLine = k - 2,
+                                    kind = "case",
+                                })
+                            end
+                            j = k
+                        else
+                            j = j + 1
+                        end
+                    end
+                    i = j
+                else
+                    i = i + 1
+                end
+            end
+            return folds
+        end
+
+        -- Imports
+        local function python_imports_provider(bufnr)
             local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
             local folds = {}
             local i = 1
+            local start = nil
+            local last_import = nil
+            local in_multiline_import = false
 
             while i <= #lines do
                 local line = lines[i]
 
-                -- Détecte les environnements LaTeX \begin{} ... \end{}
-                local env_begin = line:match("\\begin%s*{([^}]+)}")
-                if env_begin then
-                    local start_line = i - 1
+                -- Détecte une ligne d'import
+                if line:match("^import%s+") or line:match("^from%s+.+%s+import") then
+                    if not start then
+                        start = i - 1
+                    end
+                    last_import = i - 1
+
+                    -- Vérifier si c'est un import multi-ligne
+                    local open_parens = select(2, line:gsub("%(", ""))
+                    local close_parens = select(2, line:gsub("%)", ""))
+                    if open_parens > close_parens then
+                        in_multiline_import = true
+                    end
+                -- Si on est dans un import multi-ligne, continuer
+                elseif in_multiline_import then
+                    last_import = i - 1
+                    local open_parens = select(2, line:gsub("%(", ""))
+                    local close_parens = select(2, line:gsub("%)", ""))
+                    if close_parens > 0 then
+                        in_multiline_import = false
+                    end
+                -- Autoriser les lignes vides et commentaires entre les imports
+                elseif start and (line:match("^%s*$") or line:match("^%s*#")) then
+                -- Ne rien faire, on continue
+                -- Dès qu'on trouve une ligne avec du code, on ferme le fold
+                elseif start and last_import then
+                    -- On ferme le fold jusqu'à la dernière ligne d'import
+                    if last_import > start then
+                        table.insert(folds, {
+                            startLine = start,
+                            endLine = last_import,
+                            kind = "imports",
+                        })
+                    end
+                    start = nil
+                    last_import = nil
+                end
+
+                i = i + 1
+            end
+
+            -- Cas où les imports vont jusqu'à la fin du fichier
+            if start and last_import and last_import > start then
+                table.insert(folds, {
+                    startLine = start,
+                    endLine = last_import,
+                    kind = "imports",
+                })
+            end
+
+            return folds
+        end
+
+        -- Docstring
+        local function python_module_docstring_provider(bufnr)
+            local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+            local folds = {}
+            local i = 1
+
+            -- Sauter les commentaires et lignes vides au début
+            while i <= #lines and (lines[i]:match("^%s*$") or lines[i]:match("^%s*#")) do
+                i = i + 1
+            end
+
+            -- Chercher une docstring multiline avec """ ou '''
+            if i <= #lines then
+                local line = lines[i]
+                -- Correction : capturer le quote, puis utiliser %1 en dehors de la capture
+                local quote = line:match("^%s*([\"'])%1%1") -- """ ou '''
+
+                if quote then
+                    local start = i - 1
+                    local full_quote = quote:rep(3) -- Reconstituer """ ou '''
+
+                    -- Si le closing est sur la même ligne, on ignore
+                    local _, count = line:gsub(vim.pesc(full_quote), "")
+                    if count >= 2 then
+                        return folds
+                    end
+
+                    -- Chercher la fermeture
                     local j = i + 1
-                    local end_pattern = "\\end%s*{" .. env_begin:gsub("([%^%$%(%)%%%.%[%]%*%+%-%?])", "%%%1") .. "}"
+                    while j <= #lines do
+                        if lines[j]:match(vim.pesc(full_quote)) then
+                            -- On crée un fold seulement si on a au moins 3 lignes
+                            if j - 1 > start + 1 then
+                                table.insert(folds, {
+                                    startLine = start,
+                                    endLine = j - 1,
+                                    kind = "docstring",
+                                })
+                            end
+                            break
+                        end
+                        j = j + 1
+                    end
+                end
+            end
+
+            return folds
+        end
+        ----------------------------------------------------------------------
+        -- ========================== LATEX PROVIDERS =========================
+        ----------------------------------------------------------------------
+
+        local function strip_comment(line)
+            return line:gsub("%%.*$", "")
+        end
+
+        -- Environnements + sections
+        local function tex_env_provider(bufnr)
+            local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+            local folds, i = {}, 1
+
+            while i <= #lines do
+                local line = strip_comment(lines[i])
+
+                local env = line:match("\\begin%s*{([^}]+)}")
+                if env then
+                    local start = i - 1
+                    local j = i + 1
+                    local end_pat = "\\end%s*{" .. vim.pesc(env) .. "}"
 
                     while j <= #lines do
-                        if lines[j]:match(end_pattern) then
+                        if strip_comment(lines[j]):match(end_pat) then
                             table.insert(folds, {
-                                startLine = start_line,
+                                startLine = start,
                                 endLine = j - 1,
                                 kind = "environment",
                             })
                             i = j
-                            goto continue_env
+                            goto cont
                         end
                         j = j + 1
-                        if j - i > 200 then
-                            break
-                        end -- Protection
                     end
-                    ::continue_env::
                 end
 
-                -- Détecte les sections avec contenu long entre accolades
-                local section_match = line:match("\\(section|subsection|subsubsection|chapter|part)%s*{")
-                if section_match then
-                    local start_line = i - 1
-                    local brace_count = 0
-                    local found_opening = false
-                    local j = i
-
-                    while j <= #lines do
-                        local current_line = lines[j]
-                        local pos = 1
-
-                        while pos <= #current_line do
-                            local char = current_line:sub(pos, pos)
-                            if char == "{" then
-                                brace_count = brace_count + 1
-                                found_opening = true
-                            elseif char == "}" and found_opening then
-                                brace_count = brace_count - 1
-                                if brace_count == 0 then
-                                    -- Seulement folder si c'est multiligne
-                                    if j > i then
-                                        table.insert(folds, {
-                                            startLine = start_line,
-                                            endLine = j - 1,
-                                            kind = "section",
-                                        })
-                                    end
-                                    i = j
-                                    goto continue_section
-                                end
-                            elseif char == "\\" and pos < #current_line then
-                                -- Skip les accolades échappées
-                                pos = pos + 1
-                            end
-                            pos = pos + 1
-                        end
-                        j = j + 1
-                        if j - i > 100 then
-                            break
-                        end -- Protection
-                    end
-                    ::continue_section::
-                end
-
-                -- Détecte les groupes d'accolades multilignes (minimum 3 lignes)
-                if line:match("{%s*$") then -- Ligne qui se termine par une accolade ouvrante
-                    local start_line = i - 1
-                    local brace_count = 1
+                if line:match("\\(part|chapter|section|subsection|subsubsection)%s*{") then
+                    local start = i - 1
                     local j = i + 1
-
-                    while j <= #lines and brace_count > 0 do
-                        local current_line = lines[j]
-                        local pos = 1
-
-                        while pos <= #current_line do
-                            local char = current_line:sub(pos, pos)
-                            if char == "{" then
-                                brace_count = brace_count + 1
-                            elseif char == "}" then
-                                brace_count = brace_count - 1
-                                if brace_count == 0 then
-                                    -- Seulement folder si c'est assez long (minimum 3 lignes)
-                                    if j - i >= 2 then
-                                        table.insert(folds, {
-                                            startLine = start_line,
-                                            endLine = j - 1,
-                                            kind = "braces",
-                                        })
-                                    end
-                                    i = j
-                                    goto continue_braces
-                                end
-                            elseif char == "\\" and pos < #current_line then
-                                -- Skip les accolades échappées
-                                pos = pos + 1
-                            end
-                            pos = pos + 1
+                    while j <= #lines do
+                        local l = strip_comment(lines[j])
+                        if l:match("\\(part|chapter|section|subsection|subsubsection)%s*{") or l:match("\\end%s*{") then
+                            break
                         end
                         j = j + 1
-                        if j - i > 50 then
-                            break
-                        end -- Protection
                     end
-                    ::continue_braces::
+                    if j - 2 > start then
+                        table.insert(folds, {
+                            startLine = start,
+                            endLine = j - 2,
+                            kind = "section",
+                        })
+                        i = j - 1
+                    end
                 end
-
+                ::cont::
                 i = i + 1
             end
-
             return folds
         end
 
-        -- Nouvelle fonction pour détecter les crochets dans les fichiers .tex
-        local function tex_brackets_provider(bufnr)
+        -- TikZ \foreach { ... }
+        local function tex_foreach_provider(bufnr)
             local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-            local folds = {}
-            local i = 1
+            local folds, i = {}, 1
 
             while i <= #lines do
-                local line = lines[i]
-
-                -- Détecte les groupes de crochets multilignes (minimum 2 lignes)
-                -- Recherche une ligne contenant un crochet ouvrant
-                local bracket_start_pos = line:find("%[")
-                if bracket_start_pos then
-                    local start_line = i - 1 -- 0-indexé pour nvim-ufo
-                    local bracket_count = 0
-                    local j = i
-                    local found_opening = false
-
-                    -- Analyse le contenu pour compter les crochets
+                local line = strip_comment(lines[i])
+                if line:match("^%s*\\foreach%s+.+{%s*$") then
+                    local start = i - 1
+                    local depth, j = 0, i
                     while j <= #lines do
-                        local current_line = lines[j]
-                        local pos = 1
-
-                        while pos <= #current_line do
-                            local char = current_line:sub(pos, pos)
-
-                            -- Ignore les crochets échappés
-                            if char == "\\" and pos < #current_line then
-                                pos = pos + 1 -- Skip le caractère suivant
-                            elseif char == "[" then
-                                bracket_count = bracket_count + 1
-                                found_opening = true
-                            elseif char == "]" and found_opening then
-                                bracket_count = bracket_count - 1
-
-                                -- Si on ferme complètement le groupe de crochets
-                                if bracket_count == 0 then
-                                    -- Créer le fold seulement si c'est multiligne
-                                    if j > i then
-                                        table.insert(folds, {
-                                            startLine = start_line,
-                                            endLine = j - 1,
-                                            kind = "brackets",
-                                        })
-                                    end
-                                    i = j
-                                    goto continue_brackets
-                                end
-                            end
-
-                            pos = pos + 1
+                        for c in strip_comment(lines[j]):gmatch("[{}]") do
+                            depth = depth + (c == "{" and 1 or -1)
                         end
-
+                        if depth == 0 and j > i then
+                            table.insert(folds, {
+                                startLine = start,
+                                endLine = j - 1,
+                                kind = "foreach",
+                            })
+                            i = j
+                            goto cont
+                        end
                         j = j + 1
+                    end
+                end
+                ::cont::
+                i = i + 1
+            end
+            return folds
+        end
 
-                        -- Protection contre les boucles infinies
-                        if j - i > 100 then
-                            break
+        -- Arguments entre crochets multi-lignes pour commandes LaTeX
+        local function tex_bracket_args_provider(bufnr)
+            local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+            local folds, i = {}, 1
+
+            while i <= #lines do
+                local line = strip_comment(lines[i])
+
+                -- Détecte plusieurs patterns :
+                -- 1. \command[ avec crochet sur même ligne mais pas fermé
+                -- 2. \begin{env}[ avec crochet sur même ligne mais pas fermé
+                -- 3. \command ou \begin{env} seul, suivi de [ sur la ligne suivante
+                -- 4. [ seul sur une ligne
+
+                local has_open_bracket = false
+                local start_line = i - 1
+                local bracket_start_line = i
+
+                -- Cas 1 & 2: Commande avec [ sur la même ligne
+                if line:match("\\%w+%s*%[") or line:match("\\begin%s*{[^}]+}%s*%[") then
+                    -- Vérifie si le crochet n'est pas fermé sur la même ligne
+                    local open_count = select(2, line:gsub("%[", ""))
+                    local close_count = select(2, line:gsub("%]", ""))
+
+                    if open_count > close_count then
+                        has_open_bracket = true
+                        bracket_start_line = i
+                    end
+
+                -- Cas 3: Commande seule, regarder la ligne suivante
+                elseif line:match("\\%w+%s*$") or line:match("\\begin%s*{[^}]+}%s*$") then
+                    if i + 1 <= #lines then
+                        local next_line = strip_comment(lines[i + 1])
+                        if next_line:match("^%s*%[") then
+                            has_open_bracket = true
+                            bracket_start_line = i + 1
                         end
                     end
 
-                    ::continue_brackets::
+                -- Cas 4: [ seul sur une ligne
+                elseif line:match("^%s*%[%s*$") then
+                    has_open_bracket = true
+                    bracket_start_line = i
                 end
 
+                -- Si on a trouvé un crochet ouvrant non fermé
+                if has_open_bracket then
+                    local depth = 0
+                    local j = bracket_start_line
+
+                    -- Compte les crochets à partir de la ligne du crochet ouvrant
+                    while j <= #lines do
+                        local current_line = strip_comment(lines[j])
+
+                        for c in current_line:gmatch("[%[%]]") do
+                            depth = depth + (c == "[" and 1 or -1)
+                        end
+
+                        -- Si on ferme tous les crochets et qu'on a au moins 2 lignes
+                        if depth == 0 and j > start_line + 1 then
+                            table.insert(folds, {
+                                startLine = start_line,
+                                endLine = j - 1,
+                                kind = "bracket_args",
+                            })
+                            i = j
+                            goto continue
+                        end
+
+                        j = j + 1
+                    end
+                end
+
+                ::continue::
                 i = i + 1
             end
 
             return folds
         end
-
-        -- Fonction améliorée de provider_selector
-        local function enhanced_provider_selector(bufnr, filetype, buftype)
+        ----------------------------------------------------------------------
+        -- PROVIDER SELECTOR
+        ----------------------------------------------------------------------
+        local function provider_selector(bufnr, filetype)
             if filetype == "python" then
                 return function(bufnr)
-                    -- Combine treesitter, LSP et nos détections custom
-                    local treesitter_folds = require("ufo.provider.treesitter").getFolds(bufnr) or {}
-                    local literal_folds = python_literal_provider(bufnr) or {}
-                    local attributes_folds = python_class_attributes_provider(bufnr) or {}
-                    local overload_folds = python_overload_provider(bufnr) or {}
-                    local match_case_folds = python_match_case_provider(bufnr) or {}
-
-                    -- Fusionne tous les types de folds
-                    local all_folds = {}
-                    for _, fold in ipairs(treesitter_folds) do
-                        table.insert(all_folds, fold)
-                    end
-                    for _, fold in ipairs(literal_folds) do
-                        table.insert(all_folds, fold)
-                    end
-                    for _, fold in ipairs(attributes_folds) do
-                        table.insert(all_folds, fold)
-                    end
-                    for _, fold in ipairs(overload_folds) do
-                        table.insert(all_folds, fold)
-                    end
-                    for _, fold in ipairs(match_case_folds) do
-                        table.insert(all_folds, fold)
-                    end
-
-                    return all_folds
+                    local ts = require("ufo.provider.treesitter").getFolds(bufnr) or {}
+                    return vim.list_extend(
+                        ts,
+                        vim.list_extend(
+                            python_imports_provider(bufnr),
+                            vim.list_extend(
+                                python_module_docstring_provider(bufnr),
+                                vim.list_extend(
+                                    python_literal_provider(bufnr),
+                                    vim.list_extend(
+                                        python_class_attributes_provider(bufnr),
+                                        vim.list_extend(
+                                            python_overload_provider(bufnr),
+                                            python_match_case_provider(bufnr)
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
                 end
             elseif filetype == "tex" or filetype == "latex" then
                 return function(bufnr)
-                    -- Combine treesitter et nos détections custom des accolades et crochets LaTeX
-                    local treesitter_folds = require("ufo.provider.treesitter").getFolds(bufnr) or {}
-                    local tex_braces_folds = tex_braces_provider(bufnr) or {}
-                    local tex_brackets_folds = tex_brackets_provider(bufnr) or {}
-
-                    -- Fusionne les trois types de folds
-                    local all_folds = {}
-                    for _, fold in ipairs(treesitter_folds) do
-                        table.insert(all_folds, fold)
-                    end
-                    for _, fold in ipairs(tex_braces_folds) do
-                        table.insert(all_folds, fold)
-                    end
-                    for _, fold in ipairs(tex_brackets_folds) do
-                        table.insert(all_folds, fold)
-                    end
-
-                    return all_folds
+                    local ts = require("ufo.provider.treesitter").getFolds(bufnr) or {}
+                    vim.list_extend(ts, tex_env_provider(bufnr))
+                    vim.list_extend(ts, tex_foreach_provider(bufnr))
+                    vim.list_extend(ts, tex_bracket_args_provider(bufnr)) -- ← AJOUTEZ CETTE LIGNE
+                    return ts
                 end
-            else
-                -- Configuration par défaut pour les autres types de fichiers
-                local ft_map = {
-                    lua = { "treesitter" },
-                    vim = "indent",
-                    git = "",
-                }
-                return ft_map[filetype] or { "treesitter", "indent" }
             end
+            return { "treesitter", "indent" }
         end
 
-        -- Configuration nvim-ufo
+        ----------------------------------------------------------------------
+        -- UFO SETUP
+        ----------------------------------------------------------------------
         require("ufo").setup({
-            provider_selector = enhanced_provider_selector,
+            provider_selector = provider_selector,
+            -- provider_selector = enhanced_provider_selector,
 
             -- Configuration des icônes de fold avec indication du type
             fold_virt_text_handler = function(virtText, lnum, endLnum, width, truncate)
@@ -731,30 +512,48 @@ return {
                 local icon = " 󰁂 "
                 local highlight = "MoreMsg"
 
+                --
+                -- Python - Imports
+                if line_text:match("^import%s+") or line_text:match("^from%s+") then
+                    icon = "  "
+                    highlight = "Include"
+                --
+                -- Python - Docstring de module
+                elseif line_text:match('^%s*"""') or line_text:match("^%s*'''") then
+                    icon = " 󰷉 "
+                    highlight = "String"
+
+                --
                 -- Python - @overload
-                if line_text:match("^%s*@overload") then
+                elseif line_text:match("^%s*@overload") then
                     icon = " 󰡱 "
                     highlight = "Special"
+                --
                 -- Python - case dans match
                 elseif line_text:match("^%s*case%s+") then
                     icon = " 󰃽 "
                     highlight = "Conditional"
+                --
                 -- Python - Union[]
                 elseif line_text:match("Union%s*%[") then
                     icon = " 󰆧 "
                     highlight = "Type"
+                --
                 -- Python - Literal[]
                 elseif line_text:match("Literal%s*%[") then
                     icon = " 󰅩 "
                     highlight = "Type"
+                --
                 -- Python - Attributs de classe
                 elseif line_text:match("^%s+[%w_]+%s*:") or line_text:match("^%s+[%w_]+%s*=") then
                     icon = " 󰜢 "
                     highlight = "Identifier"
+                --
                 -- LaTeX - Environnements
                 elseif line_text:match("\\begin%s*{") then
                     icon = " 󰙅 "
                     highlight = "Function"
+                --
                 -- LaTeX - Sections
                 elseif line_text:match("\\(section|subsection|subsubsection|chapter|part)%s*{") then
                     icon = " 󰉫 "
@@ -763,7 +562,11 @@ return {
                 elseif line_text:match("{%s*$") then
                     icon = " 󰅲 "
                     highlight = "Delimiter"
+                --
                 -- LaTeX - Crochets
+                elseif line_text:match("%[") then
+                    icon = " 󰘨 "
+                    highlight = "Special"
                 elseif line_text:match("%[") then
                     icon = " 󰘨 "
                     highlight = "Special"
@@ -815,29 +618,16 @@ return {
             ft_ignore = { "TelescopePrompt", "alpha", "dashboard" },
         })
 
-        -- Keymaps pour les folds (conservés de la configuration originale)
-        vim.keymap.set("n", "zR", require("ufo").openAllFolds, { desc = "Open all folds" })
-        vim.keymap.set("n", "zM", require("ufo").closeAllFolds, { desc = "Close all folds" })
-        vim.keymap.set("n", "zr", require("ufo").openFoldsExceptKinds, { desc = "Open folds except kinds" })
-        vim.keymap.set("n", "zm", require("ufo").closeFoldsWith, { desc = "Close folds with" })
+        ----------------------------------------------------------------------
+        -- Keymaps
+        ----------------------------------------------------------------------
+        vim.keymap.set("n", "zR", require("ufo").openAllFolds)
+        vim.keymap.set("n", "zM", require("ufo").closeAllFolds)
         vim.keymap.set("n", "zK", function()
             local winid = require("ufo").peekFoldedLinesUnderCursor()
             if not winid then
                 vim.lsp.buf.hover()
             end
-        end, { desc = "Peek fold or LSP hover" })
-
-        -- Fold par type spécifique (conservés de la configuration originale)
-        vim.keymap.set("n", "<leader>zf", function()
-            require("ufo").closeFoldsWith("function")
-        end, { desc = "Fold functions" })
-
-        vim.keymap.set("n", "<leader>zc", function()
-            require("ufo").closeFoldsWith("class")
-        end, { desc = "Fold classes" })
-
-        vim.keymap.set("n", "<leader>zi", function()
-            require("ufo").closeFoldsWith("import")
-        end, { desc = "Fold imports" })
+        end)
     end,
 }
