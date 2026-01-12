@@ -14,10 +14,9 @@ return {
         vim.o.foldlevelstart = 99
         vim.o.foldenable = true
 
-        ----------------------------------------------------------------------
+        -- ----------------------------------------------------------------------
         -- ========================= PYTHON PROVIDERS ========================
         ----------------------------------------------------------------------
-
         -- Literal[] / Union[]
         local function python_literal_provider(bufnr)
             local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
@@ -285,10 +284,10 @@ return {
 
             return folds
         end
+
         ----------------------------------------------------------------------
         -- ========================== LATEX PROVIDERS =========================
         ----------------------------------------------------------------------
-
         local function strip_comment(line)
             return line:gsub("%%.*$", "")
         end
@@ -457,6 +456,74 @@ return {
 
             return folds
         end
+
+        -- Accolades multi-lignes en LaTeX (avec support des folds imbriqués)
+        local function tex_braces_provider(bufnr)
+            local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+            local folds = {}
+
+            -- Fonction récursive pour trouver tous les folds d'accolades
+            local function find_brace_folds(start_idx, end_idx)
+                local i = start_idx
+
+                while i <= end_idx do
+                    local line = strip_comment(lines[i])
+
+                    -- Cherche des accolades ouvrantes
+                    local pos = 1
+                    while pos <= #line do
+                        local brace_pos = line:find("{", pos, true)
+                        if not brace_pos then
+                            break
+                        end
+
+                        -- Trouve l'accolade fermante correspondante
+                        local depth = 0
+                        local j = i
+                        local char_pos = brace_pos
+
+                        while j <= end_idx do
+                            local current_line = strip_comment(lines[j])
+                            local start_pos = (j == i) and char_pos or 1
+
+                            for k = start_pos, #current_line do
+                                local c = current_line:sub(k, k)
+                                if c == "{" then
+                                    depth = depth + 1
+                                elseif c == "}" then
+                                    depth = depth - 1
+                                    if depth == 0 then
+                                        -- Trouvé l'accolade fermante correspondante
+                                        -- Créer un fold seulement si ça fait au moins 3 lignes
+                                        if j > i + 1 then
+                                            table.insert(folds, {
+                                                startLine = i - 1,
+                                                endLine = j - 1,
+                                                kind = "braces",
+                                            })
+
+                                            -- Chercher récursivement des folds imbriqués
+                                            find_brace_folds(i + 1, j - 1)
+                                        end
+                                        goto next_brace
+                                    end
+                                end
+                            end
+                            j = j + 1
+                        end
+
+                        ::next_brace::
+                        pos = brace_pos + 1
+                    end
+
+                    i = i + 1
+                end
+            end
+
+            find_brace_folds(1, #lines)
+            return folds
+        end
+
         ----------------------------------------------------------------------
         -- PROVIDER SELECTOR
         ----------------------------------------------------------------------
@@ -487,9 +554,10 @@ return {
             elseif filetype == "tex" or filetype == "latex" then
                 return function(bufnr)
                     local ts = require("ufo.provider.treesitter").getFolds(bufnr) or {}
-                    vim.list_extend(ts, tex_env_provider(bufnr))
+                    -- vim.list_extend(ts, tex_env_provider(bufnr))
                     vim.list_extend(ts, tex_foreach_provider(bufnr))
-                    vim.list_extend(ts, tex_bracket_args_provider(bufnr)) -- ← AJOUTEZ CETTE LIGNE
+                    vim.list_extend(ts, tex_bracket_args_provider(bufnr))
+                    vim.list_extend(ts, tex_braces_provider(bufnr))
                     return ts
                 end
             end
@@ -618,6 +686,59 @@ return {
             ft_ignore = { "TelescopePrompt", "alpha", "dashboard" },
         })
 
+        -- Closing all folds initially but only once per buffer
+        vim.api.nvim_create_autocmd("BufWinEnter", {
+            pattern = "*.tex",
+            callback = function(args)
+                if not vim.b[args.buf].initial_fold_done then
+                    vim.defer_fn(function()
+                        if not vim.api.nvim_buf_is_valid(args.buf) then
+                            return
+                        end
+
+                        local lines = vim.api.nvim_buf_get_lines(args.buf, 0, -1, false)
+                        local tikz_start, tikz_end, count = nil, nil, 0
+                        for i, line in ipairs(lines) do
+                            if line:match("\\begin%s*{tikzpicture}") then
+                                tikz_start = i
+                                count = count + 1
+                            elseif line:match("\\end%s*{tikzpicture}") then
+                                tikz_end = i
+                            end
+                        end
+
+                        require("ufo").closeAllFolds()
+
+                        if count == 1 and tikz_start and tikz_end then
+                            vim.api.nvim_win_set_cursor(0, { tikz_start, 0 })
+                            vim.cmd("normal! zv")
+                        else
+                            vim.defer_fn(function()
+                                local pos = vim.api.nvim_win_get_cursor(0)
+
+                                -- Ouvrir \begin{document}
+                                vim.api.nvim_win_set_cursor(0, { 1, 0 })
+                                local doc_line = vim.fn.search([[\\begin{document}]], "w")
+                                if doc_line > 0 then
+                                    vim.api.nvim_win_set_cursor(0, { doc_line, 0 })
+                                    vim.cmd("normal! zv") -- zv au lieu de zo
+                                end
+
+                                -- Ouvrir tous les \begin{tikzpicture}
+                                vim.api.nvim_win_set_cursor(0, { 1, 0 })
+                                while vim.fn.search([[\\begin{tikzpicture}]], "W") > 0 do
+                                    vim.cmd("normal! zv")
+                                end
+
+                                vim.api.nvim_win_set_cursor(0, pos)
+                            end, 500) -- Délai plus long
+                        end
+
+                        vim.b[args.buf].initial_fold_done = true
+                    end, 500)
+                end
+            end,
+        })
         ----------------------------------------------------------------------
         -- Keymaps
         ----------------------------------------------------------------------

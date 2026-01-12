@@ -70,13 +70,31 @@ opt.backupcopy = "yes"
 opt.wildmenu = true
 opt.wildmode = { "longest:full", "full" }
 opt.wildoptions = "pum"
-
-vim.api.nvim_create_autocmd("FileType", {
-    pattern = { "tex", "latex", "plaintex" },
-    callback = function()
-        vim.opt_local.iskeyword:remove(":")
-        vim.opt_local.iskeyword:remove("_")
-        -- Conserver les caractères utiles pour LaTeX
-        vim.opt_local.iskeyword:append("@-@") -- pour les packages avec @
-    end,
-})
+--
+-- Préserver l'état des folds lors de la sauvegarde
+-- vim.api.nvim_create_autocmd("BufWritePre", {
+--     pattern = "*",
+--     callback = function()
+--         -- Sauvegarder la vue (qui inclut l'état des folds)
+--         vim.cmd("silent! mkview")
+--     end,
+-- })
+--
+-- vim.api.nvim_create_autocmd("BufWinEnter", {
+--     pattern = "*",
+--     callback = function()
+--         -- Restaurer la vue sauvegardée
+--         vim.cmd("silent! loadview")
+--     end,
+-- })
+--
+-- vim.api.nvim_create_autocmd("BufWinEnter", {
+--     pattern = "*",
+--     callback = function()
+--         -- Petit délai pour laisser UFO créer les folds d'abord
+--         vim.defer_fn(function()
+--             -- Définir foldlevel élevé pour ne plus fermer automatiquement
+--             vim.o.foldlevel = 99
+--         end, 50)
+--     end,
+-- })

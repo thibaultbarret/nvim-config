@@ -96,6 +96,13 @@ return {
             end
         end, { desc = "Browse custom directory" })
 
+        map("n", "<leader>ftex", function()
+            fzf.files({
+                prompt = " TeX Files> ",
+                fd_opts = [[--color=never --type f --hidden --follow --exclude .git --extension tex]],
+            })
+        end, { desc = "Find .tex files" })
+
         -- Buffers, oldfiles, etc. (bonus)
         map("n", "<leader>bb", fzf.buffers, { desc = "fzf buffers" })
         map("n", "<leader>fo", fzf.oldfiles, { desc = "fzf old files" })

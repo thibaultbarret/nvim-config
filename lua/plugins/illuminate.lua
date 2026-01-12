@@ -3,12 +3,13 @@ return {
     lazy = false,
     config = function()
         require("illuminate").configure({
-        providers = {
+            providers = {
                 "lsp",
                 "treesitter",
-                "regex"
+                "regex",
             },
             delay = 100,
+            under_cursor = true,
         })
     end,
 }

@@ -193,4 +193,41 @@ return {
         i(2, "radius"),
         t(")}"),
     }),
+    -- foreach
+    s("foreach", {
+        t("\\foreach \\"),
+        i(1, "var"),
+        t(" in {"),
+        i(2, "list"),
+        t("} {"),
+        t({ "", "    " }),
+        i(0),
+        t({ "", "}" }),
+    }),
+    -- x_sym
+    s("x_sym", {
+        t("\\foreach \\x in {-1, 1}{"),
+        t({ "", "    \\begin{scope}[xscale = \\x]" }),
+        t({ "", "        " }),
+        i(0, "expression"),
+        t({ "", "    \\end{scope}" }),
+        t({ "", "}" }),
+    }),
+    -- y_sym
+    s("y_sym", {
+        t("\\foreach \\y in {-1, 1}{"),
+        t({ "", "    \\begin{scope}[yscale = \\y]" }),
+        t({ "", "        " }),
+        i(0, "expression"),
+        t({ "", "    \\end{scope}" }),
+        t({ "", "}" }),
+    }),
+    -- pgfmathsetmacro
+    s("pgfmathsetmacro", {
+        t("\\pgfmathsetmacro{\\"),
+        i(1, "var"),
+        t("}{"),
+        i(2, "expression"),
+        t({ "}", "" }),
+    }),
 }

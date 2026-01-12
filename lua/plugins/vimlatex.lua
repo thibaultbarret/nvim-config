@@ -3,7 +3,7 @@ return {
     lazy = false,
     config = function()
         vim.g.vimtex_syntax_enabled = 1 -- S'assurer que la syntaxe est activée (c'est le défaut)
-        vim.g.vimtex_syntax_conceal_disable = 0 -- Optionnel
+        -- vim.g.vimtex_syntax_conceal_disable = 0 -- Optionnel
         vim.g.vimtex_view_method = "skim"
         vim.g.vimtex_view_skim_sync = 1
         vim.g.vimtex_view_skim_activate = 1
