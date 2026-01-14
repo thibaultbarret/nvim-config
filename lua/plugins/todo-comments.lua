@@ -27,6 +27,11 @@ return {
         todo_comments.setup({
             signs = true,
             keywords = {
+                -- Change color:
+                TODO = { icon = "", color = "#F38AA7" },
+                NOTE = { icon = "󰠮", color = "#74C6EB" },
+                FIXME = { icon = "󰶯", color = "#A6E2A0" },
+                -- custom keywords:
                 FIGURE = { icon = "📊", color = "#F54927", alt = { "FIG", "DIAGRAM", "CHART" } },
             },
         })

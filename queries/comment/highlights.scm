@@ -52,7 +52,7 @@ type: (_) @type
 
 (_
   type: (word) @comment.todo
-  (#any-of? @comment.todo "TODO" "todo" "TYPO" "typo" "WIP" "wip"))
+  (#any-of? @comment.todo "TODO" "TODO:" "todo" "TYPO" "typo" "WIP" "wip"))
 
 (_
   type: (word) @comment.error

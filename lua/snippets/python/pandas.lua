@@ -1,8 +1,14 @@
 local ls = require("luasnip")
 local s = ls.snippet
 local t = ls.text_node
+local i = ls.insert_node
 
 return {
+    s("pandas", {
+        t({ "import pandas as pd", "" }),
+        i(0),
+    }),
+
     s("df_csv", {
         t({
             "header = 0,",
