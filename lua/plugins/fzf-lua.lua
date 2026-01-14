@@ -31,6 +31,21 @@ return {
 
         local map = vim.keymap.set
 
+        local function get_visual_selection()
+            -- Sauvegarder le registre actuel
+            local saved_reg = vim.fn.getreg('"')
+            local saved_regtype = vim.fn.getregtype('"')
+
+            -- Copier la sélection dans le registre
+            vim.cmd('normal! "xy')
+            local selection = vim.fn.getreg("x")
+
+            -- Restaurer le registre
+            vim.fn.setreg('"', saved_reg, saved_regtype)
+
+            return selection
+        end
+
         -- Recherche de fichiers
         map("n", "<leader>ff", fzf.files, { desc = "fzf find files" })
         map("n", "<leader>fa", function()
@@ -38,6 +53,19 @@ return {
                 fd_opts = [[--color=never --type f --hidden --follow --no-ignore]],
             })
         end, { desc = "fzf find all files (no ignore)" })
+
+        map("v", "<leader>FF", function()
+            local selection = get_visual_selection()
+            require("fzf-lua").files({
+                query = selection,
+                fd_opts = [[--color=never --type f --hidden --follow --no-ignore]],
+            })
+        end, { desc = "Rechercher fichiers avec sélection" })
+
+        map("v", "<leader>fW", function()
+            local selection = get_visual_selection()
+            require("fzf-lua").grep({ search = selection })
+        end, { desc = "Rechercher la sélection avec fzf-lua" })
 
         -- Grep/recherche de texte
         map("n", "<leader>fw", fzf.live_grep, { desc = "fzf live grep" })

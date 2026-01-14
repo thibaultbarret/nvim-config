@@ -118,7 +118,15 @@ return {
             sources = cmp.config.sources({
                 { name = "nvim_lsp", priority = 1000 },
                 { name = "luasnip", priority = 900, option = { show_autosnippets = true } },
-                { name = "buffer", priority = 500 },
+                {
+                    name = "buffer",
+                    option = {
+                        get_bufnrs = function()
+                            return vim.api.nvim_list_bufs()
+                        end,
+                    },
+                    priority = 500,
+                },
                 {
                     name = "path",
                     priority = 200,

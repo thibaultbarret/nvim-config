@@ -155,4 +155,5 @@ vim.lsp.enable({
     "ruff",
     "bashls",
     "clangd",
+    "texlab",
 })

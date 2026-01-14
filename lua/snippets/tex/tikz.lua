@@ -230,4 +230,26 @@ return {
         i(2, "expression"),
         t({ "}", "" }),
     }),
+    -- Absolute coordinate
+    s("cabs", {
+        t("\\coordinate ("),
+        i(1, "name"),
+        t(") at ("),
+        i(2, "x"),
+        t(", "),
+        i(3, "y"),
+        t(") ;"),
+        i(0),
+    }),
+    -- Relative coordinate
+    s("crel", {
+        t("\\coordinate ($ ("),
+        i(1, "point"),
+        t(") + ("),
+        i(2, "x"),
+        c(3, { t(", "), t(": ") }),
+        i(4, "y"),
+        t(") $) ;"),
+        i(0),
+    }),
 }
