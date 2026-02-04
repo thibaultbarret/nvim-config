@@ -61,7 +61,7 @@ return {
     --
     -- init dict class
     s("dict", {
-        t("self.__dict_"),
+        t("self.__d_"),
         i(1),
         t(": "),
         c(2, {
@@ -73,7 +73,7 @@ return {
     --
     -- init list class
     s("list", {
-        t("self.__list_"),
+        t("self.__l_"),
         i(1),
         t(": "),
         c(2, {
@@ -85,10 +85,19 @@ return {
     --
     -- init str class
     s("str", {
-        t("self.__str_"),
+        t("self.__s_"),
         i(1),
         t(': str = "'),
         i(2),
         t('"'),
+    }),
+
+    -- init array class
+    s("array", {
+        t("self.__a_"),
+        i(1),
+        t(" = "),
+        i(2),
+        t(""),
     }),
 }

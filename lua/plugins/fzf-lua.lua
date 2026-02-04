@@ -70,6 +70,11 @@ return {
         -- Grep/recherche de texte
         map("n", "<leader>fw", fzf.live_grep, { desc = "fzf live grep" })
 
+        map("n", "<leader>fwa", function()
+            fzf.live_grep({
+                rg_opts = "--column --line-number --no-heading --color=always --smart-case --no-ignore --hidden",
+            })
+        end, { desc = "fzf live grep" })
         -- Git
         map("n", "<leader>cm", fzf.git_commits, { desc = "fzf git commits" })
         map("n", "<leader>gt", fzf.git_status, { desc = "fzf git status" })

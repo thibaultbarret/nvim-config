@@ -17,7 +17,10 @@ map("n", "<Esc>", "<cmd>noh<CR>", { desc = "general clear highlights" })
 -- Copie complete du fichier
 map("n", "<C-c>", "<cmd>%y+<CR>", { desc = "general copy whole file" })
 
+map("n", "<C-s>", "<cmd>:w<CR>", { desc = "Save file" })
+--
 -- Copie du texte selectionne dans le clipboard
+
 map("v", "<C-c>", function()
     vim.cmd('normal! "+y')
 end, { desc = "copy selection to clipboard" })
