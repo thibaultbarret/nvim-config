@@ -21,4 +21,18 @@ return {
         t("}"),
         t({ "", "\\end{table}" }),
     }),
+    s("tableinput", {
+        t("\\begin{table}[h!] % "),
+        i(1),
+        t({ "", "    \\input{Tables/" }),
+        f(helpers.sanitize_label, { 1 }),
+        t({ "}", "    \\centering" }),
+        t({ "", "    \\caption{", "        \\label{tab:" }),
+        f(helpers.sanitize_label, { 1 }),
+        t({ "}", "        " }),
+        rep(1),
+        t({ "", "    }" }),
+        t({ "", "\\end{table}" }),
+        i(0),
+    }),
 }

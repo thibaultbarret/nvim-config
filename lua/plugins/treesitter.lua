@@ -1,31 +1,37 @@
 return {
     "nvim-treesitter/nvim-treesitter",
-    branch = "master",
+    branch = "main", -- ← master → main
     lazy = false,
     build = ":TSUpdate",
     config = function()
-        -- Configuration nvim-treesitter
-        require("nvim-treesitter.configs").setup({
-            highlight = {
-                enable = true,
-                additional_vim_regex_highlighting = true,
-            },
+        -- Le module a changé : nvim-treesitter.configs n'existe plus
+        require("nvim-treesitter").setup({
+            highlight = { enable = true },
             indent = { enable = true },
-            ensure_installed = {
-                "bash",
-                "python",
-                "latex",
-                "markdown",
-                "lua",
-                "gitignore",
-                "cpp",
-                "c",
-                "javascript",
-                "json",
-            },
         })
 
-        -- Enregistrement des langages personnalisés
+        -- ensure_installed n'est plus une option de setup()
+        -- Il faut appeler l'API d'installation séparément
+        local to_install = {
+            "bash",
+            "python",
+            "latex",
+            "lua",
+            "gitignore",
+            "cpp",
+            "c",
+            "javascript",
+            "json",
+        }
+        local already = require("nvim-treesitter.config").get_installed()
+        local missing = vim.iter(to_install)
+            :filter(function(p)
+                return not vim.tbl_contains(already, p)
+            end)
+            :totable()
+        require("nvim-treesitter").install(missing)
+
+        -- Ça, ça ne change pas ✓
         vim.treesitter.language.register("cpp", "mfront")
         vim.treesitter.language.register("cpp", "mtest")
     end,

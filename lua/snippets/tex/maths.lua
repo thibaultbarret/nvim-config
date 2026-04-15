@@ -69,7 +69,27 @@ return {
     }),
     -- Power
     s("pow", {
-        t("^{ "),
+        i(1),
+        t("^{"),
+        i(0),
+        t("} "),
+    }),
+    -- Subscript
+    s("ind", {
+        i(1),
+        t("_{"),
+        i(0),
+        t("} "),
+    }),
+    -- Mathrm
+    s("mrm", {
+        t("\\mathrm{"),
+        i(0),
+        t("} "),
+    }),
+    -- Mathsf
+    s("msf", {
+        t("\\mathsf{"),
         i(0),
         t("} "),
     }),

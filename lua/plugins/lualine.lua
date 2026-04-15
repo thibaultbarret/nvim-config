@@ -3,13 +3,13 @@ return {
     dependencies = { "nvim-tree/nvim-web-devicons" },
     config = function()
         local lualine = require("lualine")
-        local lazy_status = require("lazy.status") -- affiche le nombre de mise à jour plugins lazy dans la barre
+        local lazy_status = require("lazy.status")
 
-        -- configuration de lualine
         lualine.setup({
             options = {
                 icons_enabled = true,
-                theme = "catppuccin",
+                theme = "auto",
+                -- Glyphes Powerline explicites (Nerd Font requis)
                 component_separators = { left = "", right = "" },
                 section_separators = { left = "", right = "" },
                 disabled_filetypes = {
@@ -18,11 +18,25 @@ return {
                 },
                 ignore_focus = {},
                 always_divide_middle = true,
-                globalstatus = false,
+                always_show_tabline = true, -- ← nouvelle option
+                globalstatus = true, -- ← recommandé sur Neovim 0.7+
                 refresh = {
-                    statusline = 1000,
-                    tabline = 1000,
-                    winbar = 1000,
+                    statusline = 100, -- ← défaut actuel du dépôt (était 1000)
+                    tabline = 100,
+                    winbar = 100,
+                    refresh_time = 16, -- ← nouvelle sous-option (~60fps)
+                    events = { -- ← nouvelle sous-option
+                        "WinEnter",
+                        "BufEnter",
+                        "BufWritePost",
+                        "SessionLoadPost",
+                        "FileChangedShellPost",
+                        "VimResized",
+                        "Filetype",
+                        "CursorMoved",
+                        "CursorMovedI",
+                        "ModeChanged",
+                    },
                 },
             },
             sections = {
@@ -36,11 +50,10 @@ return {
                         color = { fg = "#ff9e64" },
                     },
                     { "encoding" },
-                    -- { "fileformat" },
                     { "filetype" },
                 },
-                lualine_y = { "location" },
-                lualine_z = { "%L" },
+                lualine_y = { "progress" }, -- ← remplace "location" (plus standard)
+                lualine_z = { "location" }, -- ← ligne:colonne ici, total lignes retiré
             },
             inactive_sections = {
                 lualine_a = {},

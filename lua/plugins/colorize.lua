@@ -19,6 +19,7 @@ return {
                 mode = "background", -- ou 'foreground', 'virtualtext'
                 tailwind = false,
             },
+            suppress_deprecation = true,
         })
     end,
 }

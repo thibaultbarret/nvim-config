@@ -62,7 +62,40 @@ map("n", "N", "Nzzzv", { desc = "Previous search result (centered)" })
 map({ "n" }, "<leader>aa", "ggVG", { desc = "Select all" })
 
 -- Ouvrir fichier à partir du path dans un nouveau buffer
-map("n", "<leader>ofb", "yi{:edit <C-r>0<CR>", { desc = "Open file in new buffer" })
+map("n", "<leader>ofb", function()
+    local line = vim.api.nvim_get_current_line()
+    local col = vim.api.nvim_win_get_cursor(0)[2] + 1
+
+    -- Cherche d'abord entre double quotes
+    local s, e = line:find('"([^"]+)"', 1)
+    local filename = nil
+
+    while s do
+        if col >= s and col <= e then
+            filename = line:sub(s + 1, e - 1)
+            break
+        end
+        s, e = line:find('"([^"]+)"', e + 1)
+    end
+
+    -- Si pas trouvé, cherche entre accolades
+    if not filename then
+        s, e = line:find("{([^}]+)}", 1)
+        while s do
+            if col >= s and col <= e then
+                filename = line:sub(s + 1, e - 1)
+                break
+            end
+            s, e = line:find("{([^}]+)}", e + 1)
+        end
+    end
+
+    if filename then
+        vim.cmd("edit " .. filename)
+    else
+        vim.notify("Aucun fichier trouvé sous le curseur", vim.log.levels.WARN)
+    end
+end, { desc = "Open file in new buffer" })
 
 -- Ouvrir fichier à partir du path dans un split vertical
 map("n", "<leader>ofvs", "yi{:vsplit <C-r>0<CR>", { desc = "Open file in vertical split" })
@@ -89,6 +122,16 @@ end, { desc = "Copilot Accept", noremap = true, silent = true })
 
 map("t", "<C-;>", "<C-\\><C-n>", { desc = "Sortir du terminal" })
 
+map("n", "gS", function()
+    local line = vim.fn.getline(".")
+    local parts = vim.split(line:gsub("^%s*", ""), ", ")
+    local indent = line:match("^%s*")
+    vim.fn.setline(".", indent .. parts[1] .. ",")
+    for i = 2, #parts do
+        vim.fn.append(vim.fn.line(".") + i - 2, indent .. parts[i] .. (i < #parts and "," or ""))
+    end
+end, { desc = "Split line on commas" })
+
 -- Remplacer le mot sous le curseur sur la ligne
 -- map("n", "rel", function()
 -- 	-- Copie le mot sous le curseur
@@ -98,3 +141,4 @@ map("t", "<C-;>", "<C-\\><C-n>", { desc = "Sortir du terminal" })
 -- 	-- Utilise vim.fn.feedkeys pour s'assurer que l'autocomplétion fonctionne
 -- 	vim.fn.feedkeys(":.s/" .. vim.fn.escape(word, "/\\") .. "//g" .. string.rep("\27[D", 2), "n")
 -- end, { desc = "Remplacer le mot sous le curseur sur la ligne courante" })
+--

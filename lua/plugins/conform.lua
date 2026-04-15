@@ -12,6 +12,7 @@ return {
                 lua = { "stylua" },
                 python = { "ruff_format", "ruff_organize_imports" },
                 cpp = { "clang_format" },
+                c = { "clang_format" },
                 sh = { "beautysh" },
                 bash = { "beautysh" },
                 zsh = { "beautysh" },
@@ -29,6 +30,9 @@ return {
                 },
                 stylua = {
                     prepend_args = { "--indent-type", "Spaces", "--indent-width", "4" },
+                },
+                clang_format = {
+                    prepend_args = { "--style", "file" },
                 },
             },
             format_on_save = {

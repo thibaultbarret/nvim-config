@@ -252,4 +252,14 @@ return {
         t(") $) ;"),
         i(0),
     }),
+    -- Externalization enable
+    s("tkzexten", {
+        t("\\tikzexternalenable"),
+        i(0),
+    }),
+    -- Externalization enable
+    s("tkzextdis", {
+        t("\\tikzexternaldisable"),
+        i(0),
+    }),
 }

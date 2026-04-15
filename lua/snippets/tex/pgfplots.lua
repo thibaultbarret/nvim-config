@@ -6,6 +6,7 @@ local i = ls.insert_node
 local c = ls.choice_node
 local f = ls.function_node
 local rep = require("luasnip.extras").rep
+local fmt = require("luasnip.extras.fmt").fmt
 
 return {
     -- Axis environment
@@ -30,4 +31,31 @@ return {
         t({ "", "    \\end{axis}" }),
         t({ "", "\\end{tikzpicture}" }),
     }),
+    s(
+        "addplot",
+        fmt(
+            [[\addplot
+[
+    {}
+]
+table
+[
+    x = {{{}}},
+    y = {{{}}},
+    col sep = {},
+]
+{{{}}} ;]],
+            {
+                i(1, "options"),
+                i(2, "x_col"),
+                i(3, "y_col"),
+                c(4, {
+                    t("semicolon"),
+                    t("comma"),
+                    t("space"),
+                }),
+                i(5, "fichier.csv"),
+            }
+        )
+    ),
 }

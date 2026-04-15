@@ -28,7 +28,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
         -- map("<leader>", "", "")
 
         local function client_supports_method(client, method, bufnr)
-            if vim.fn.has("nvim-0.11") == 1 then
+            if vim.fn.has("nvim-0.12") == 1 then
                 return client:supports_method(method, bufnr)
             else
                 return client.supports_method(method, { bufnr = bufnr })
