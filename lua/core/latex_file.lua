@@ -9,4 +9,15 @@ vim.api.nvim_create_autocmd("FileType", {
     end,
 })
 
--- Open automatically the fold containing \begin{document} in LaTeX files
+vim.api.nvim_create_autocmd("FileType", {
+    pattern = { "tex", "plaintex", "bib" },
+    callback = function()
+        vim.opt_local.commentstring = "% %s"
+    end,
+})
+
+vim.filetype.add({
+    extension = {
+        tex = "tex",
+    },
+})

@@ -142,3 +142,109 @@ end, { desc = "Split line on commas" })
 -- 	vim.fn.feedkeys(":.s/" .. vim.fn.escape(word, "/\\") .. "//g" .. string.rep("\27[D", 2), "n")
 -- end, { desc = "Remplacer le mot sous le curseur sur la ligne courante" })
 --
+--
+vim.keymap.set("v", "<leader>ct", function()
+    -- Capturer les positions PENDANT le mode visuel
+    local start_pos = vim.fn.getpos("v")
+    local end_pos = vim.fn.getpos(".")
+
+    -- Normaliser (au cas où la sélection est faite de droite à gauche)
+    local start_col = math.min(start_pos[3], end_pos[3]) - 1
+    local end_col = math.max(start_pos[3], end_pos[3])
+    local row = start_pos[2] - 1
+
+    local line = vim.api.nvim_get_current_line()
+    end_col = math.min(end_col, #line)
+
+    local selected = line:sub(start_col + 1, end_col)
+    local total_len = #selected
+
+    local trimmed = selected:match("^%s*(.-)%s*$")
+    if trimmed == "" then
+        return
+    end
+
+    local padding = math.floor((total_len - #trimmed) / 2)
+    local centered = string.rep(" ", padding) .. trimmed .. string.rep(" ", total_len - padding - #trimmed)
+
+    -- Quitter le mode visuel avant d'écrire
+    local esc = vim.api.nvim_replace_termcodes("<Esc>", true, false, true)
+    vim.api.nvim_feedkeys(esc, "x", false)
+
+    vim.api.nvim_buf_set_text(0, row, start_col, row, end_col, { centered })
+end, { desc = "Center selected text with whitespace" })
+
+local function find_ampersand_range(include_delimiters)
+    local line = vim.api.nvim_get_current_line()
+    local col = vim.fn.col(".")
+
+    local start_col = nil
+    for i = col, 1, -1 do
+        if line:sub(i, i) == "&" then
+            start_col = i + 1
+            break
+        end
+    end
+
+    local end_col = nil
+    for i = col, #line do
+        if line:sub(i, i) == "&" then
+            end_col = i - 1
+            break
+        end
+    end
+
+    if not start_col or not end_col then
+        return nil, nil
+    end
+
+    if include_delimiters then
+        start_col = start_col - 1
+        end_col = end_col + 1
+    end
+
+    return start_col, end_col
+end
+
+local function apply_range(start_col, end_col)
+    local lnum = vim.fn.line(".")
+    vim.fn.cursor(lnum, start_col)
+    vim.cmd("normal! v")
+    vim.fn.cursor(lnum, end_col)
+end
+
+local ESC = vim.api.nvim_replace_termcodes("<Esc>", true, false, true)
+
+-- Operator-pending (d, c, y...)
+vim.keymap.set("o", "i&", function()
+    local s, e = find_ampersand_range(false)
+    if s then
+        apply_range(s, e)
+    end
+end, { desc = "Text object inside &" })
+
+vim.keymap.set("o", "a&", function()
+    local s, e = find_ampersand_range(true)
+    if s then
+        apply_range(s, e)
+    end
+end, { desc = "Text object around &" })
+
+-- Visual (v) — Esc synchrone avec le flag "x"
+vim.keymap.set("x", "i&", function()
+    local s, e = find_ampersand_range(false)
+    if not s then
+        return
+    end
+    vim.api.nvim_feedkeys(ESC, "x", false) -- "x" = synchrone
+    apply_range(s, e)
+end, { desc = "Text object inside & (visual)" })
+
+vim.keymap.set("x", "a&", function()
+    local s, e = find_ampersand_range(true)
+    if not s then
+        return
+    end
+    vim.api.nvim_feedkeys(ESC, "x", false)
+    apply_range(s, e)
+end, { desc = "Text object around & (visual)" })

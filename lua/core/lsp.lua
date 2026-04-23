@@ -157,4 +157,5 @@ vim.lsp.enable({
     "bashls",
     "clangd",
     "texlab",
+    "ltex",
 })

@@ -23,6 +23,13 @@ return {
         local luasnip = require("luasnip")
         local types = require("luasnip.util.types")
 
+        vim.api.nvim_create_autocmd("FileType", {
+            pattern = { "tex", "plaintex" },
+            callback = function()
+                vim.bo.omnifunc = "vimtex#complete#omnifunc"
+            end,
+        })
+
         -- =================================================================
         -- CONFIGURATION LUASNIP
         -- =================================================================
@@ -139,7 +146,8 @@ return {
                         end,
                     },
                 },
-                { name = "vimtex" },
+                -- { name = "vimtex" },
+                -- { name = "omni" },
             }),
 
             experimental = {

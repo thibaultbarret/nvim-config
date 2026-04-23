@@ -35,7 +35,7 @@ return {
     }),
     -- line width
     s("lw", {
-        t("line width ="),
+        t("line width = "),
         i(1),
         t(", "),
     }),

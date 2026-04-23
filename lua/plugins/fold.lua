@@ -292,6 +292,63 @@ return {
             return line:gsub("%%.*$", "")
         end
 
+        local function tex_addplot_provider(bufnr)
+            local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+            local folds, i = {}, 1
+
+            while i <= #lines do
+                local line = strip_comment(lines[i])
+
+                if line:match("^%s*\\addplot") then
+                    local start = i - 1
+                    local j = i + 1
+
+                    while j <= #lines do
+                        local l = strip_comment(lines[j])
+                        if l:match(";%s*$") then
+                            if j - 1 > start then
+                                table.insert(folds, {
+                                    startLine = start,
+                                    endLine = j - 1,
+                                    kind = "addplot",
+                                })
+                            end
+                            i = j
+                            goto continue
+                        end
+                        j = j + 1
+                    end
+                end
+
+                ::continue::
+                i = i + 1
+            end
+            return folds
+        end
+        -- Préambule : entre \documentclass et \begin{document}
+        local function tex_preamble_provider(bufnr)
+            local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+            local folds = {}
+            local start_line = nil
+
+            for i, line in ipairs(lines) do
+                if not start_line and strip_comment(line):match("\\documentclass") then
+                    start_line = i - 1
+                elseif start_line and strip_comment(line):match("\\begin%s*{document}") then
+                    if i - 2 > start_line then
+                        table.insert(folds, {
+                            startLine = start_line,
+                            endLine = i - 2,
+                            kind = "preamble",
+                        })
+                    end
+                    break
+                end
+            end
+
+            return folds
+        end
+
         -- Environnements + sections
         local function tex_env_provider(bufnr)
             local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
@@ -555,7 +612,9 @@ return {
                 return function(bufnr)
                     local ts = require("ufo.provider.treesitter").getFolds(bufnr) or {}
                     -- vim.list_extend(ts, tex_env_provider(bufnr))
+                    vim.list_extend(ts, tex_preamble_provider(bufnr))
                     vim.list_extend(ts, tex_foreach_provider(bufnr))
+                    vim.list_extend(ts, tex_addplot_provider(bufnr))
                     vim.list_extend(ts, tex_bracket_args_provider(bufnr))
                     vim.list_extend(ts, tex_braces_provider(bufnr))
                     return ts
@@ -638,6 +697,10 @@ return {
                 elseif line_text:match("%[") then
                     icon = " 󰘨 "
                     highlight = "Special"
+                -- LaTeX - Préambule
+                elseif line_text:match("\\documentclass") then
+                    icon = " 󰈙 "
+                    highlight = "PreProc"
                 end
 
                 local suffix = (icon .. "%d "):format(endLnum - lnum)
