@@ -36,19 +36,29 @@ return {
                     ["\\draw[]"] = "ignore",
                     ["\\pgfplotsset{}"] = "ignore",
                     ["\\pgfplotsset"] = "ignore",
+                    --
                     ["\\usepgfplotslibrary{}"] = "ignore",
                     ["\\tikzexternalize"] = "ignore",
                     ["\\tikzexternalize[]"] = "ignore",
                     ["\\tikzset{}"] = "ignore",
                     ["\\pgfdeclareplotmark{}"] = "ignore",
+                    --
+                    ["\\node"] = "ignore",
+                    ["\\node at ()[]{}"] = "ignore",
+                    ["\\node () at ()[]{}"] = "ignore",
+                    --
                     ["\\addplot[]{}"] = "ignore",
                     ["\\addplot"] = "ignore",
+                    ["\\addplot[]table[]{}"] = "ignore",
+                    ["\\addplot+[]table[]{}"] = "ignore",
+                    --
                     ["\\draw"] = "ignore",
                     -- ["\"] = "ignore",
                 },
                 environments = {
                     ["axis"] = "ignore",
                     ["tikzpicture"] = "ignore",
+                    ["groupplot"] = "ignore",
                     ["tikzpicturenocompress"] = "ignore",
                 },
             },

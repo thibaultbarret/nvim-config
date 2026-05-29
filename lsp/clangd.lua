@@ -65,7 +65,7 @@ end
 
 ---@type vim.lsp.Config
 return {
-    cmd = { "clangd", "--background-index" },
+    cmd = { "clangd", "--background-index", "--log=verbose" },
     filetypes = { "c", "cpp", "objc", "objcpp", "cuda" },
     root_markers = {
         ".clangd",

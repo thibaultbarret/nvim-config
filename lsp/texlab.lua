@@ -18,6 +18,7 @@ return {
             diagnosticsDelay = 500,
             latexFormatter = "none",
             bibtexFormatter = "none",
+            ignoredPatterns = { "Unused label" },
         },
     },
     on_attach = function(client, bufnr)

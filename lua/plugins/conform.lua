@@ -18,6 +18,8 @@ return {
                 zsh = { "beautysh" },
                 latex = { "tex-fmt" },
                 tex = { "tex-fmt" },
+                javascript = { "biome" },
+                astro = { "prettier" },
             },
             formatters = {
                 prettier = {
