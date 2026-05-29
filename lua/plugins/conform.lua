@@ -14,6 +14,7 @@ return {
                 cpp = { "clang_format" },
                 c = { "clang_format" },
                 sh = { "beautysh" },
+                snakemake = { "snakefmt" },
                 bash = { "beautysh" },
                 zsh = { "beautysh" },
                 latex = { "tex-fmt" },
