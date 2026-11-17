@@ -1,1 +1,0 @@
-/Users/thibault/Documents/THESE/Mfront/Treesitter/tree-sitter-mfront_mtest/grammars/mfront/queries/folds.scm
