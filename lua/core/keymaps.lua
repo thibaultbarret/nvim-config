@@ -44,9 +44,10 @@ local function smart_paste_above()
     end
 end
 
--- "x" (visuel seul) et non "v" : "v" inclut le mode sélection, utilisé par LuaSnip
+-- "x" (visuel seul) et non "v" : "v" inclut le mode sélection, utilisé par LuaSnip.
+-- <C-P> n'est pas utilisable : le terminal envoie le même code que <C-p>.
 map({ "n", "x" }, "<C-p>", smart_paste_below, { desc = "paste from clipboard below" })
-map({ "n", "x" }, "<C-P>", smart_paste_above, { desc = "paste from clipboard above" })
+map({ "n", "x" }, "<leader>P", smart_paste_above, { desc = "paste from clipboard above" })
 
 -- Commentaires
 map("n", "<C-q>", "gcc", { desc = "toggle comment", remap = true })
@@ -117,9 +118,15 @@ map("n", "<leader>rew", function()
     )
 end, { desc = "Remplacer le mot sous le curseur globalement" })
 
-map("i", "<C-m>", function()
-    vim.fn.feedkeys(vim.fn["copilot#Accept"](), "")
-end, { desc = "Copilot Accept", noremap = true, silent = true })
+-- Accepter la suggestion Copilot. Pas <C-m> : c'est le même code que <CR>, Entrée
+-- acceptait alors la suggestion. Quand le menu nvim-cmp est ouvert, <C-y> valide
+-- d'abord la complétion ; sans suggestion Copilot, n'insère rien.
+map("i", "<C-y>", 'copilot#Accept("")', {
+    desc = "Copilot Accept",
+    expr = true,
+    replace_keycodes = false,
+    silent = true,
+})
 
 map("t", "<C-;>", "<C-\\><C-n>", { desc = "Sortir du terminal" })
 
