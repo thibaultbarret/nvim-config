@@ -17,7 +17,11 @@ vim.api.nvim_create_autocmd("LspAttach", {
         end
 
         map("gl", vim.diagnostic.open_float, "Open Diagnostic Float")
-        map("K", vim.lsp.buf.hover, "Hover Documentation")
+        -- Hover natif (noice ne le gère plus, voir noice.lua) : cadre via winborder,
+        -- titres « ### » masqués par queries/markdown/highlights.scm
+        map("K", function()
+            vim.lsp.buf.hover({ max_width = 80, max_height = 20 })
+        end, "Hover Documentation")
         map("gs", vim.lsp.buf.signature_help, "Signature Documentation")
         map("gd", vim.lsp.buf.definition, "Goto Definition")
         map("gD", vim.lsp.buf.declaration, "Goto Declaration")
@@ -160,5 +164,7 @@ vim.lsp.enable({
     "texlab",
     "ltex",
     "mfront_lsp",
-    "pgfplots_lsp",
+    "pgfplots_tikz_lsp",
+    "neocmake",
+    "yamlls",
 })
