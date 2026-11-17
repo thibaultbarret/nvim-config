@@ -11,16 +11,8 @@ return {
 					package_uninstalled = "✗",
 				},
 			},
-			ensure_installed = {
-				-- LSP servers
-				"pyright",
-				"ruff",
-				"lua-language-server",
-				-- Linters
-				"luacheck",
-				-- Formatters
-				"stylua",
-			},
+			-- mason.nvim n'a pas d'option ensure_installed : la liste des outils
+			-- (LSP, formatters, linters) est dans mason-tool-installer.lua.
 		})
 	end,
 }

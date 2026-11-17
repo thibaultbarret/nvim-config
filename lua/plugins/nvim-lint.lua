@@ -5,67 +5,17 @@ return {
         local lint = require("lint")
 
         -- Configuration des linters par type de fichier
+        -- Python : pas de ruff ici, le serveur LSP ruff (lsp/ruff.lua) fournit déjà
+        -- les diagnostics ; les deux ensemble les affichaient en double.
+        -- Lua : pas de luacheck, lua_ls (lsp/lua_ls.lua) fournit déjà les diagnostics,
+        -- et luacheck est incompatible avec Lua 5.5 (variables de boucle constantes).
         lint.linters_by_ft = {
-            python = { "ruff" },
-            lua = { "luacheck" },
             -- markdown = { "markdownlint" },
             yaml = { "yamllint" },
             json = { "jsonlint" },
             sh = { "shellcheck" },
             bash = { "shellcheck" },
             zsh = { "shellcheck" },
-        }
-
-        -- Configuration personnalisée pour Ruff
-        lint.linters.ruff.args = {
-            "--select",
-            -- Sélectionne les règles que Ruff doit gérer
-            table.concat({
-                "E", -- pycodestyle errors
-                "W", -- pycodestyle warnings
-                "F", -- pyflakes (imports non utilisés, variables non utilisées, etc.)
-                "I", -- isort (ordre des imports)
-                "N", -- pep8-naming
-                "UP", -- pyupgrade
-                "B", -- flake8-bugbear
-                "S", -- flake8-bandit
-                "C4", -- flake8-comprehensions
-                "SIM", -- flake8-simplify
-                "ARG", -- flake8-unused-arguments
-                "PTH", -- flake8-use-pathlib
-                "ERA", -- eradicate (code commenté)
-                "PL", -- pylint
-                "RUF", -- ruff-specific rules
-            }, ","),
-
-            "--ignore",
-            -- Ignore quelques règles problématiques
-            table.concat({
-                "E501", -- Line too long (si vous préférez un formatter)
-                "W503", -- Line break before binary operator
-                "E203", -- Whitespace before ':' (conflit avec black)
-                "B008", -- Do not perform function calls in argument defaults
-                "S101", -- Use of assert (OK en dev/tests)
-            }, ","),
-
-            "--format",
-            "json",
-            "--stdin-filename",
-            function()
-                return vim.fn.expand("%:p")
-            end,
-            "-",
-        }
-
-        -- Configuration pour luacheck (si vous éditez des configs Neovim)
-        lint.linters.luacheck.args = {
-            "--globals",
-            "vim",
-            "--formatter",
-            "plain",
-            "--codes",
-            "--ranges",
-            "-",
         }
 
         -- Configuration pour markdownlint
