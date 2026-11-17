@@ -3,7 +3,7 @@ return {
     event = { "BufReadPre", "BufNewFile" },
     dependencies = { "nvim-lua/plenary.nvim" },
     keys = {
-        { "<leader>tdt", "<cmd>TodoFzfLua<CR>", { desc = "Todo Telescope" } },
+        { "<leader>tdt", "<cmd>TodoFzfLua<CR>", { desc = "Todo fzf" } },
         { "<leader>tdl", "<cmd>TodoQuickFix<CR>", { desc = "Todo QuickFix" } },
         {
             "]t",
@@ -26,6 +26,9 @@ return {
 
         todo_comments.setup({
             signs = true,
+            -- Ne colorer que le mot-clé (TODO, NOTE…) : par défaut, le texte qui suit
+            -- prend aussi sa couleur et masque la coloration normale du commentaire.
+            highlight = { after = "" },
             keywords = {
                 -- Change color:
                 TODO = { icon = "", color = "#F38AA7" },
