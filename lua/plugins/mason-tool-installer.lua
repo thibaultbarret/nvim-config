@@ -28,6 +28,7 @@ return {
             "tex-fmt",
             "biome",
             "yamlfmt",
+            "bibtex-tidy",
             -- Linters (lua/plugins/nvim-lint.lua)
             "shellcheck",
             "yamllint",
