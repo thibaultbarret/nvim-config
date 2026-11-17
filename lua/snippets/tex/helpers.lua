@@ -144,15 +144,18 @@ function M.find_chapter_dir()
     return file_dir, vim.fs.basename(file_dir)
 end
 
+-- Fichiers principaux possibles, par ordre de priorité
+local MANUSCRIPT_ROOT_FILES = { "Manuscrit.tex", "main.tex" }
+
 -- Racine du manuscrit : parent du dossier CHAPITRE-*/ANNEXE-*,
--- sinon dossier contenant main.tex, sinon dossier de travail.
+-- sinon dossier contenant Manuscrit.tex (ou main.tex), sinon dossier de travail.
 function M.find_manuscript_root()
     for dir in vim.fs.parents(vim.fn.expand("%:p")) do
         if is_section_dir(vim.fs.basename(dir)) then
             return vim.fs.dirname(dir)
         end
     end
-    return vim.fs.root(0, "main.tex") or vim.fn.getcwd()
+    return vim.fs.root(0, MANUSCRIPT_ROOT_FILES) or vim.fn.getcwd()
 end
 
 -- Chemin de `dir` relatif à la racine du manuscrit, avec "/" final ("" si racine)
