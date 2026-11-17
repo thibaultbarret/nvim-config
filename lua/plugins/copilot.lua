@@ -2,9 +2,10 @@ return {
     {
         "github/copilot.vim",
         lazy = false,
-        config = function() -- Mapping tab is already used in NvChad
-            vim.g.copilot_no_tab_map = true -- Disable tab mapping
-            vim.g.copilot_assume_mapped = true -- Assume that the mapping is already done
+        -- `init` s'exécute AVANT le chargement : copilot.vim ne crée alors pas son <Tab>
+        init = function()
+            vim.g.copilot_no_tab_map = true -- <Tab> est géré par nvim-cmp/LuaSnip
+            vim.g.copilot_assume_mapped = true -- l'acceptation est mappée ailleurs (<C-m>)
         end,
     },
     {

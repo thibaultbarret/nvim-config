@@ -2,7 +2,7 @@ local map = vim.keymap.set
 local opts = { noremap = true, silent = true }
 
 -- Nouveau buffer
-map("n", "<leader>b", "<cmd>enew<CR>", { desc = "buffer new" })
+map("n", "<leader>bn", "<cmd>enew<CR>", { desc = "buffer new" })
 
 -- Buffer suivant / précédent
 map("n", "<Tab>", "<cmd>BufferLineCycleNext<CR>", { desc = "buffer goto next" })
@@ -44,8 +44,9 @@ local function smart_paste_above()
     end
 end
 
-map({ "n", "v" }, "<C-p>", smart_paste_below, { desc = "paste from clipboard below" })
-map({ "n", "v" }, "<C-P>", smart_paste_above, { desc = "paste from clipboard above" })
+-- "x" (visuel seul) et non "v" : "v" inclut le mode sélection, utilisé par LuaSnip
+map({ "n", "x" }, "<C-p>", smart_paste_below, { desc = "paste from clipboard below" })
+map({ "n", "x" }, "<C-P>", smart_paste_above, { desc = "paste from clipboard above" })
 
 -- Commentaires
 map("n", "<C-q>", "gcc", { desc = "toggle comment", remap = true })
@@ -132,16 +133,6 @@ map("n", "gS", function()
     end
 end, { desc = "Split line on commas" })
 
--- Remplacer le mot sous le curseur sur la ligne
--- map("n", "rel", function()
--- 	-- Copie le mot sous le curseur
--- 	vim.cmd("normal! yiw")
--- 	-- Lance la substitution sur la ligne courante avec le mot copié
--- 	local word = vim.fn.getreg("0")
--- 	-- Utilise vim.fn.feedkeys pour s'assurer que l'autocomplétion fonctionne
--- 	vim.fn.feedkeys(":.s/" .. vim.fn.escape(word, "/\\") .. "//g" .. string.rep("\27[D", 2), "n")
--- end, { desc = "Remplacer le mot sous le curseur sur la ligne courante" })
---
 --
 map("v", "<leader>ct", function()
     local mode = vim.fn.mode()
@@ -540,3 +531,5 @@ map("n", "<leader>rd", function()
     vim.keymap.set("n", "q", do_cancel, opts)
     vim.keymap.set("n", "<Esc>", do_cancel, opts)
 end, { desc = "Renommer le dossier du chemin sous le curseur" })
+
+-- map("v", "<leader>td", function() end)
