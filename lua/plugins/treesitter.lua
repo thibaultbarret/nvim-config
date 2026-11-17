@@ -51,6 +51,7 @@ return {
             "gitignore",
             "cpp",
             "c",
+            "doxygen", -- injecté dans les commentaires ///, //!, /** */ de C/C++ (@param…)
             "javascript",
             "json",
             "cmake",
