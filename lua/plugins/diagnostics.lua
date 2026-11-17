@@ -2,22 +2,9 @@ return {
     "rachartier/tiny-inline-diagnostic.nvim",
     event = "VeryLazy",
     priority = 1000,
+    -- Le filtrage des avertissements texlab est fait dans lsp/texlab.lua (handler
+    -- du client), sans réécrire vim.diagnostic.set pour tout Neovim.
     config = function()
-        -- Filtrer les diagnostics WARN pour les fichiers .tex avant qu'ils n'arrivent au plugin
-        local original_get = vim.diagnostic.get
-        vim.diagnostic.get = function(bufnr, opts)
-            local diagnostics = original_get(bufnr, opts)
-            local ft = vim.api.nvim_buf_get_option(bufnr or 0, "filetype")
-
-            if ft == "tex" then
-                return vim.tbl_filter(function(d)
-                    return d.severity ~= vim.diagnostic.severity.WARN
-                end, diagnostics)
-            end
-
-            return diagnostics
-        end
-
         require("tiny-inline-diagnostic").setup({
             preset = "modern",
             transparent_bg = false,
@@ -76,7 +63,6 @@ return {
                 override_open_float = false,
             },
         })
-
         vim.diagnostic.config({ virtual_text = false })
     end,
 }

@@ -14,6 +14,11 @@ return {
     -- root_markers (et non root_dir calculé ici) : depuis Neovim 0.12, ce fichier
     -- est lu au démarrage, avant l'ouverture du buffer .tex.
     root_markers = { ".git" },
+    -- Même encodage que texlab, ltex et Copilot sur les .tex : sinon ce serveur
+    -- négocie UTF-8 et les positions divergent sur les lignes accentuées.
+    capabilities = {
+        general = { positionEncodings = { "utf-16" } },
+    },
     on_attach = function(client, bufnr)
         vim.lsp.semantic_tokens.enable(true, { bufnr = bufnr, client_id = client.id })
     end,

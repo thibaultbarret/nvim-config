@@ -23,25 +23,19 @@ return {
     },
     on_attach = function(client, bufnr)
         client.server_capabilities.semanticTokensProvider = nil
-
-        vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
-            buffer = bufnr,
-            callback = function()
-                local ns = vim.lsp.diagnostic.get_namespace(client.id)
-                if vim.bo[bufnr].filetype == "tex" then
-                    vim.diagnostic.config({
-                        virtual_text = { severity = { min = vim.diagnostic.severity.ERROR } },
-                        signs = { severity = { min = vim.diagnostic.severity.ERROR } },
-                        underline = { severity = { min = vim.diagnostic.severity.ERROR } },
-                    }, ns)
-                else
-                    vim.diagnostic.config({
-                        virtual_text = true,
-                        signs = true,
-                        underline = true,
-                    }, ns)
-                end
-            end,
-        })
     end,
+    handlers = {
+        -- Ne garde que les erreurs de texlab dans les .tex (avertissements masqués),
+        -- les .bib gardent tout. Propre à ce client : ltex n'est pas concerné.
+        -- texlab envoie ses diagnostics en push uniquement (pas de pull).
+        ["textDocument/publishDiagnostics"] = function(err, result, ctx)
+            local bufnr = result and vim.uri_to_bufnr(result.uri)
+            if bufnr and vim.bo[bufnr].filetype == "tex" then
+                result.diagnostics = vim.tbl_filter(function(d)
+                    return d.severity == vim.lsp.protocol.DiagnosticSeverity.Error
+                end, result.diagnostics)
+            end
+            return vim.lsp.diagnostic.on_publish_diagnostics(err, result, ctx)
+        end,
+    },
 }
