@@ -69,24 +69,28 @@ return {
         t({ "", "" }),
         i(0),
     }),
+    -- Création d'un fichier TikZ <CHAPITRE-*>/Tikz/<Nom>.tex + inclusion
+    helpers.tikz_input_snippet("tikzfile", false),
+    -- Création d'un dossier TikZ <CHAPITRE-*>/Tikz/<Nom>/figure.tex + inclusion
+    helpers.tikz_input_snippet("tikzfolder", true),
+    -- Figure + création du fichier TikZ dans le chapitre
+    helpers.tikz_float_snippet("figuretikzchap", "figure", "fig", false),
+    helpers.tikz_float_snippet("figuretikzfolderchap", "figure", "fig", true),
     -- Figure with externalization
     s("figuretikz", {
         t("\\begin{figure}[h!] % "),
         i(1),
-        t({ "", "" }),
-        t("    \\tikzsetnextfilename{"),
+        t({ "", "    \\tikzsetnextfilename{" }),
         f(helpers.sanitize_title, { 1 }),
-        t("}"),
-        t({ "", "" }),
-        t("    \\input{Tikz/"),
+        t({ "}", "    \\input{Tikz/" }),
         f(helpers.sanitize_title, { 1 }),
         t(".tex}"),
         t({ "", "    \\centering" }),
-        t({ "", "    \\caption{\\label{fig:" }),
+        t({ "", "    \\caption{", "        \\label{fig:" }),
         f(helpers.sanitize_label, { 1 }),
-        t("}"),
+        t({ "}", "        " }),
         rep(1),
-        t("}"),
+        t({ "", "    }" }),
         t({ "", "\\end{figure}" }),
     }),
     -- Figure with externalization in folder
@@ -102,11 +106,11 @@ return {
         f(helpers.sanitize_title, { 1 }),
         t("/figure.tex}"),
         t({ "", "    \\centering" }),
-        t({ "", "    \\caption{\\label{fig:" }),
+        t({ "", "    \\caption{", "        \\label{fig:" }),
         f(helpers.sanitize_label, { 1 }),
-        t("}"),
+        t({ "}", "        " }),
         rep(1),
-        t("}"),
+        t({ "", "    }" }),
         t({ "", "\\end{figure}" }),
     }),
     -- Tikzpicture
@@ -261,5 +265,9 @@ return {
     s("tkzextdis", {
         t("\\tikzexternaldisable"),
         i(0),
+    }),
+    -- LuaLaTeX directive
+    s("lualatex", {
+        t("% !TeX program = lualatex"),
     }),
 }

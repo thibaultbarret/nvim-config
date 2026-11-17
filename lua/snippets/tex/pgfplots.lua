@@ -58,4 +58,14 @@ table
             }
         )
     ),
+    s(
+        "searchpath",
+        t({
+            [[\pgfplotsset{]],
+            [[  table/search path = {]],
+            [[      ./,]],
+            [[  }]],
+            [[}]],
+        })
+    ),
 }

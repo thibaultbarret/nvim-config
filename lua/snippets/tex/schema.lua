@@ -3,7 +3,6 @@ local ls = require("luasnip")
 local s = ls.snippet
 local t = ls.text_node
 local i = ls.insert_node
-local c = ls.choice_node
 local f = ls.function_node
 local rep = require("luasnip.extras").rep
 
@@ -56,4 +55,7 @@ return {
         t({ "", "    }" }),
         t({ "", "\\end{schema}" }),
     }),
+    -- Schéma + création du fichier TikZ dans le chapitre
+    helpers.tikz_float_snippet("schema-tikz-chap", "schema", "sch", false),
+    helpers.tikz_float_snippet("schema-tikz-folder-chap", "schema", "sch", true),
 }
