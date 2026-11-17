@@ -64,6 +64,12 @@ return {
                         italic = true,
                         cterm = { italic = true },
                     },
+                    -- Même couleur pour la syntaxe Vim classique (fichiers sans Treesitter)
+                    ["Comment"] = {
+                        fg = colors.overlay1,
+                        italic = true,
+                        cterm = { italic = true },
+                    },
                     ["@comment.todo"] = {
                         fg = colors.base,
                         bg = colors.yellow,
