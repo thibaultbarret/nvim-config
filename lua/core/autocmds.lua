@@ -17,23 +17,10 @@ vim.api.nvim_create_autocmd("BufWritePre", {
     end,
 })
 
--- Detection des fichiers .mfront
-vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
-    pattern = "*.mfront",
-    callback = function()
-        vim.bo.filetype = "mfront"
-    end,
-})
-
-vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
-    pattern = "*.mtest",
-    callback = function()
-        vim.bo.filetype = "mtest"
-    end,
-})
--- Modification de la date des fichiers .mtest
+-- Modification de la date (@Date) des fichiers .mfront et .mtest à la sauvegarde
+-- (filetypes mfront/mtest déclarés dans core/filetypes.lua)
 vim.api.nvim_create_autocmd("BufWritePre", {
-    pattern = "*.mfront",
+    pattern = { "*.mfront", "*.mtest" },
     callback = function()
         local current_date = os.date("%d/%m/%Y")
         local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
@@ -47,13 +34,5 @@ vim.api.nvim_create_autocmd("BufWritePre", {
             end
         end
     end,
-    -- desc = "Mise à jour automatique de la date dans les fichiers MFront"
-})
-
-vim.filetype.add({
-    filename = {
-        [".zshrc"] = "zsh",
-        [".bashrc"] = "bash",
-        [".profile"] = "sh",
-    },
+    desc = "Mise à jour automatique de la date dans les fichiers MFront/MTest",
 })
