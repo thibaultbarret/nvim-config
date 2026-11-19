@@ -14,12 +14,18 @@ local cursorline_hl = vim.api.nvim_get_hl(0, { name = "CursorLine" })
 vim.api.nvim_set_hl(0, "CursorColumn", cursorline_hl)
 
 -- Line break
-
 opt.wrap = true -- Active le retour à la ligne visuel
 -- opt.linebreak = true -- Coupe aux espaces plutôt qu'au milieu d'un mot
 opt.breakindent = true
 opt.showbreak = "󰘍 "
 
+vim.keymap.set({ "n", "v" }, "j", function()
+    return vim.v.count > 0 and "j" or "gj"
+end, { expr = true })
+
+vim.keymap.set({ "n", "v" }, "k", function()
+    return vim.v.count > 0 and "k" or "gk"
+end, { expr = true })
 --
 -- Numero des lignes
 opt.number = true
@@ -71,30 +77,5 @@ opt.wildmenu = true
 opt.wildmode = { "longest:full", "full" }
 opt.wildoptions = "pum"
 --
--- Préserver l'état des folds lors de la sauvegarde
--- vim.api.nvim_create_autocmd("BufWritePre", {
---     pattern = "*",
---     callback = function()
---         -- Sauvegarder la vue (qui inclut l'état des folds)
---         vim.cmd("silent! mkview")
---     end,
--- })
---
--- vim.api.nvim_create_autocmd("BufWinEnter", {
---     pattern = "*",
---     callback = function()
---         -- Restaurer la vue sauvegardée
---         vim.cmd("silent! loadview")
---     end,
--- })
---
--- vim.api.nvim_create_autocmd("BufWinEnter", {
---     pattern = "*",
---     callback = function()
---         -- Petit délai pour laisser UFO créer les folds d'abord
---         vim.defer_fn(function()
---             -- Définir foldlevel élevé pour ne plus fermer automatiquement
---             vim.o.foldlevel = 99
---         end, 50)
---     end,
--- })
+
+opt.hidden = true
