@@ -1,6 +1,7 @@
 return {
     "lervag/vimtex",
     lazy = false,
+    tag = "v2.15",
     config = function()
         vim.g.vimtex_syntax_enabled = 1 -- S'assurer que la syntaxe est activée (c'est le défaut)
         -- vim.g.vimtex_syntax_conceal_disable = 0 -- Optionnel

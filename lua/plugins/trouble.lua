@@ -1,20 +1,10 @@
 return {
     "folke/trouble.nvim",
     dependencies = { "nvim-tree/nvim-web-devicons" },
+    -- Syntaxe Trouble v3 (les anciennes clés v2 position/height/mode/action_keys
+    -- étaient ignorées). q / <esc> / <cr> sont déjà les touches par défaut.
     opts = {
-        position = "bottom", -- Position de la fenêtre (top, bottom, left, right)
-        height = 10, -- Hauteur si positionné en haut/bas
-        width = 50, -- Largeur si positionné à gauche/droite
-        -- icons = true, -- Afficher les icônes
-        mode = "document_diagnostics", -- Mode par défaut (erreurs du document actuel)
-        fold_open = "", -- Icône pour les dossiers ouverts
-        fold_closed = "", -- Icône pour les dossiers fermés
-        action_keys = {
-            -- Raccourcis pour les actions dans la fenêtre
-            close = "q", -- Fermer la fenêtre
-            cancel = "<esc>", -- Annuler
-            jump = "<cr>", -- Aller à l'erreur
-        },
+        win = { position = "bottom", size = 10 },
     },
     cmd = "Trouble",
     keys = {

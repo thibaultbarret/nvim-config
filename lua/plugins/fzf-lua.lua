@@ -136,9 +136,20 @@ return {
             })
         end, { desc = "Find .tex files" })
 
+        map("n", "<leader>fpy", function()
+            fzf.files({
+                prompt = " Python Files> ",
+                fd_opts = [[--color=never --type f --hidden --follow --exclude .git --exclude .env --exclude .snakemake --extension py]],
+            })
+        end, { desc = "Find .py files" })
+
         -- Buffers, oldfiles, etc. (bonus)
         map("n", "<leader>bb", fzf.buffers, { desc = "fzf buffers" })
         map("n", "<leader>fo", fzf.oldfiles, { desc = "fzf old files" })
-        map("n", "<leader>fh", fzf.help_tags, { desc = "fzf help tags" })
+        map("n", "<leader>fch", fzf.command_history, { desc = "fzf command history" })
+
+        -- workspace search
+        map("n", "<leader>wb", fzf.blines)
+        map("n", "<leader>wa", fzf.lines)
     end,
 }

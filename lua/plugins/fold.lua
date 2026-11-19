@@ -292,6 +292,25 @@ return {
             return line:gsub("%%.*$", "")
         end
 
+        -- Les motifs Lua n'ont pas d'alternance `|` : on capture le nom de la
+        -- commande puis on le compare à cet ensemble (gère aussi \section*{).
+        local SECTIONING_COMMANDS = {
+            part = true,
+            chapter = true,
+            section = true,
+            subsection = true,
+            subsubsection = true,
+        }
+
+        local function is_sectioning(line)
+            for command in line:gmatch("\\(%a+)%*?%s*{") do
+                if SECTIONING_COMMANDS[command] then
+                    return true
+                end
+            end
+            return false
+        end
+
         local function tex_addplot_provider(bufnr)
             local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
             local folds, i = {}, 1
@@ -377,12 +396,12 @@ return {
                     end
                 end
 
-                if line:match("\\(part|chapter|section|subsection|subsubsection)%s*{") then
+                if is_sectioning(line) then
                     local start = i - 1
                     local j = i + 1
                     while j <= #lines do
                         local l = strip_comment(lines[j])
-                        if l:match("\\(part|chapter|section|subsection|subsubsection)%s*{") or l:match("\\end%s*{") then
+                        if is_sectioning(l) or l:match("\\end%s*{") then
                             break
                         end
                         j = j + 1
@@ -682,9 +701,15 @@ return {
                     highlight = "Function"
                 --
                 -- LaTeX - Sections
-                elseif line_text:match("\\(section|subsection|subsubsection|chapter|part)%s*{") then
+                elseif is_sectioning(line_text) then
                     icon = " 󰉫 "
                     highlight = "Title"
+                --
+                -- LaTeX - Préambule (avant les accolades/crochets qui le captureraient)
+                elseif line_text:match("\\documentclass") then
+                    icon = " 󰈙 "
+                    highlight = "PreProc"
+                --
                 -- LaTeX - Accolades génériques
                 elseif line_text:match("{%s*$") then
                     icon = " 󰅲 "
@@ -694,13 +719,6 @@ return {
                 elseif line_text:match("%[") then
                     icon = " 󰘨 "
                     highlight = "Special"
-                elseif line_text:match("%[") then
-                    icon = " 󰘨 "
-                    highlight = "Special"
-                -- LaTeX - Préambule
-                elseif line_text:match("\\documentclass") then
-                    icon = " 󰈙 "
-                    highlight = "PreProc"
                 end
 
                 local suffix = (icon .. "%d "):format(endLnum - lnum)
