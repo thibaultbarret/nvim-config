@@ -1,46 +1,66 @@
+---@type vim.lsp.Config
+
+-- Résout l'interpréteur à utiliser pour un root donné.
+-- Priorité : venv local au projet > environnement activé dans le shell > échec bruyant.
+local function resolve_python(root)
+    -- 1. venv local au projet (le plus correct : chaque projet son environnement)
+    for _, name in ipairs({ ".venv", "venv", ".env", "env" }) do
+        local py = root .. "/" .. name .. "/bin/python"
+        if vim.uv.fs_stat(py) then
+            return py
+        end
+    end
+    -- 2. environnement activé avant le lancement de nvim (venv ou conda)
+    local venv = vim.env.VIRTUAL_ENV or vim.env.CONDA_PREFIX
+    if venv then
+        local py = venv .. "/bin/python"
+        if vim.uv.fs_stat(py) then
+            return py
+        end
+    end
+    -- 3. rien trouvé : pyright tomberait sur le python système (tiers manquants)
+    return nil
+end
+
 return {
     cmd = { "pyright-langserver", "--stdio" },
     filetypes = { "python" },
+
+    -- Tiers priorisés : les marqueurs de racine projet sont cherchés sur tout
+    -- l'arbre avant de se rabattre sur des marqueurs faibles présents dans les
+    -- sous-dossiers (requirements.txt), pour ne pas enraciner sur le module.
     root_markers = {
-        "pyproject.toml",
-        "pyrightconfig.json",
+        { "pyrightconfig.json", "pyproject.toml" },
         "setup.py",
-        "requirements.txt",
         ".git",
+        "requirements.txt",
     },
+
+    before_init = function(_, config)
+        local root = config.root_dir or vim.fn.getcwd()
+        local py = resolve_python(root)
+        config.settings.python = config.settings.python or {}
+        if py then
+            config.settings.python.pythonPath = py
+        else
+            vim.notify("pyright : aucun venv résolu sous " .. root .. " → python système", vim.log.levels.WARN)
+        end
+    end,
+
     settings = {
-        pyright = {
-            -- Désactive l'organisation des imports (Ruff s'en charge)
-            disableOrganizeImports = true,
-            -- Désactive le language server pour les imports (Ruff plus performant)
-            disableLanguageServices = false,
-            -- Utilise le pyrightconfig.json ou pyproject.toml si présent
-            useLibraryCodeForTypes = true,
-        },
         python = {
-            pythonPath = vim.fn.exepath("python"),
+            -- pythonPath est injecté par before_init.
             analysis = {
-                -- Recherche automatique des chemins Python
                 autoSearchPaths = true,
-
                 diagnosticMode = "openFilesOnly",
-                --
-                -- Utilise les types des bibliothèques installées
                 useLibraryCodeForTypes = true,
-                --
-                -- Mode de vérification des types (basic/standard/strict)
                 typeCheckingMode = "basic",
-
-                -- Completions automatiques
                 autoImportCompletions = true,
                 completeFunctionParens = true,
                 includePackageImportsInAutoImports = true,
-
-                -- NOUVELLES OPTIMISATIONS
-                -- Indexation plus rapide
                 indexing = true,
-                venvPath = ".",
-                venv = ".venv",
+                -- Layout src : décommente si ton package vit sous src/
+                -- extraPaths = { "src" },
             },
         },
     },

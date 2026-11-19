@@ -65,8 +65,26 @@ end
 
 ---@type vim.lsp.Config
 return {
-    cmd = { "clangd", "--background-index", "--log=verbose" },
-    filetypes = { "c", "cpp", "objc", "objcpp", "cuda" },
+    -- /usr/local/opt/llvm est un lien Homebrew stable vers la version installée :
+    -- il survit aux `brew upgrade llvm`, contrairement au chemin Cellar versionné.
+    cmd = {
+        "/usr/local/opt/llvm/bin/clangd",
+        "--query-driver=/usr/local/opt/llvm/bin/clang++",
+        "--debug-modules-builder",
+        "--background-index",
+        "--log=verbose",
+        -- "--experimental-modules-support", -- ← le flag clé
+        "--clang-tidy",
+        "--header-insertion=never",
+    },
+    filetypes = {
+        "c",
+        "cpp",
+        "objc",
+        "objcpp",
+        "cuda",
+        "proto",
+    },
     root_markers = {
         ".clangd",
         ".clang-tidy",
