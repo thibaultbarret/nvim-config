@@ -55,6 +55,20 @@ local function completion_buffers()
     end, vim.api.nvim_list_bufs())
 end
 
+-- Python : masque les membres _x / __x__ quand on utilise un objet (obj.),
+-- mais les garde dans la classe (self., cls., super().) ou si le mot tapé commence par « _ ».
+local PY_OWN_RECEIVERS = { self = true, cls = true, ["super()"] = true }
+local function keep_python_member(label, before_cursor)
+    if label:sub(1, 1) ~= "_" then
+        return true
+    end
+    local receiver, typed = before_cursor:match("([%w_]+%(?%)?)%.([%w_]*)$")
+    if not receiver then
+        return true -- pas un accès à un attribut
+    end
+    return PY_OWN_RECEIVERS[receiver] == true or typed:sub(1, 1) == "_"
+end
+
 local function format_entry(entry, vim_item)
     local detail = entry.source.name == "nvim_lsp" and entry.completion_item.detail or nil
     vim_item.kind = string.format("%s %s", KIND_ICONS[vim_item.kind] or "", vim_item.kind or "")
@@ -153,7 +167,14 @@ return {
             }),
 
             sources = cmp.config.sources({
-                { name = "nvim_lsp", priority = 1000 },
+                {
+                    name = "nvim_lsp",
+                    priority = 1000,
+                    entry_filter = function(entry, ctx)
+                        return ctx.filetype ~= "python"
+                            or keep_python_member(entry.completion_item.label, ctx.cursor_before_line)
+                    end,
+                },
                 { name = "luasnip", priority = 900, option = { show_autosnippets = true } },
                 {
                     name = "buffer",
