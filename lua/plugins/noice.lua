@@ -75,9 +75,20 @@ return {
 			end
 			return fallback
 		end
-		vim.keymap.set({ "n", "i", "s" }, "<C-f>", function()
+		vim.keymap.set({ "n", "s" }, "<C-f>", function()
 			return scroll_docs(DOC_SCROLL_LINES, "<C-f>")
 		end, { silent = true, expr = true, desc = "Défiler la doc LSP vers le bas" })
+		-- En insertion, sans doc à défiler, <C-f> ouvre un picker qui insère le chemin du fichier choisi
+		-- (path_completion : ../ dans la recherche remonte d'un dossier).
+		vim.keymap.set("i", "<C-f>", function()
+			if scroll_docs(DOC_SCROLL_LINES, false) == false then
+				-- Différé : un mapping `expr` ne peut pas ouvrir de fenêtre.
+				vim.schedule(function()
+					require("path_completion").project({ kind = "file" })
+				end)
+			end
+			return ""
+		end, { silent = true, expr = true, desc = "Défiler la doc LSP ou insérer un chemin de fichier" })
 		vim.keymap.set({ "n", "i", "s" }, "<C-b>", function()
 			return scroll_docs(-DOC_SCROLL_LINES, "<C-b>")
 		end, { silent = true, expr = true, desc = "Défiler la doc LSP vers le haut" })
