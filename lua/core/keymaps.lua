@@ -56,7 +56,7 @@ map("n", "N", "Nzzzv", { desc = "Previous search result (centered)" })
 -- Tout selectionner
 map({ "n" }, "<leader>aa", "ggVG", { desc = "Select all" })
 
--- Ouvrir le fichier dont le chemin est sous le curseur, dans la fenêtre de droite
+-- Ouvrir fichier à partir du path dans un nouveau buffer
 map("n", "<leader>ofb", function()
     local line = vim.api.nvim_get_current_line()
     local col = vim.api.nvim_win_get_cursor(0)[2] + 1
@@ -86,13 +86,11 @@ map("n", "<leader>ofb", function()
     end
 
     if filename then
-        local path = vim.fn.fnamemodify(filename, ":p") -- résolu avant de changer de fenêtre
-        require("config.windows").focus_right()
-        vim.cmd.edit(vim.fn.fnameescape(path))
+        vim.cmd("edit " .. filename)
     else
         vim.notify("Aucun fichier trouvé sous le curseur", vim.log.levels.WARN)
     end
-end, { desc = "Open file under cursor in right window" })
+end, { desc = "Open file in new buffer" })
 
 -- Ouvrir fichier à partir du path dans un split vertical
 map("n", "<leader>ofvs", "yi{:vsplit <C-r>0<CR>", { desc = "Open file in vertical split" })

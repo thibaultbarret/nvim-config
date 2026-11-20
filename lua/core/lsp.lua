@@ -9,27 +9,6 @@ vim.lsp.config("*", {
     },
 })
 
--- gd : la définition s'ouvre toujours à droite. Le split n'est créé qu'à la réponse
--- du serveur (pas de split vide si rien n'est trouvé).
-local function definition_right()
-    vim.lsp.buf.definition({
-        on_list = function(list)
-            if #list.items == 0 then
-                return
-            end
-            require("config.windows").focus_right()
-            if #list.items == 1 then
-                local item = list.items[1]
-                vim.cmd.edit(vim.fn.fnameescape(item.filename))
-                vim.api.nvim_win_set_cursor(0, { item.lnum, math.max(item.col - 1, 0) })
-                return
-            end
-            vim.fn.setqflist({}, " ", { title = list.title, items = list.items })
-            vim.cmd("cfirst | botright copen | wincmd p")
-        end,
-    })
-end
-
 vim.api.nvim_create_autocmd("LspAttach", {
     group = vim.api.nvim_create_augroup("lsp-attach", { clear = true }),
     callback = function(event)
@@ -44,7 +23,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
             vim.lsp.buf.hover({ max_width = 80, max_height = 20 })
         end, "Hover Documentation")
         map("gs", vim.lsp.buf.signature_help, "Signature Documentation")
-        map("gd", definition_right, "Goto Definition (right window)")
+        map("gd", vim.lsp.buf.definition, "Goto Definition")
         map("gD", vim.lsp.buf.declaration, "Goto Declaration")
         map("gr", vim.lsp.buf.references, "References")
         map("<leader>la", vim.lsp.buf.code_action, "Code Action")
