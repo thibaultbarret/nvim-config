@@ -25,29 +25,22 @@ map("v", "<C-c>", function()
     vim.cmd('normal! "+y')
 end, { desc = "copy selection to clipboard" })
 
--- Coller du texte depuis le clipboard
-local function smart_paste_below()
-    local mode = vim.fn.mode()
-    if mode == "v" or mode == "V" or mode == "\22" then -- modes visual
-        vim.cmd('normal! "+p')
-    else -- mode normal
-        vim.cmd('normal! "+p')
-    end
-end
-
-local function smart_paste_above()
-    local mode = vim.fn.mode()
-    if mode == "v" or mode == "V" or mode == "\22" then -- modes visual
-        vim.cmd('normal! "+p') -- en visual, P et p font la même chose
-    else -- mode normal
-        vim.cmd('normal! "+P')
+-- Coller du texte depuis le clipboard, réindenté par smart-paste en mode normal.
+-- En visuel, collage natif : l'API paste() de smart-paste ne gère que le mode normal.
+local function clipboard_paste(key)
+    return function()
+        if vim.fn.mode() == "n" then
+            require("smart-paste").paste({ register = "+", key = key })
+        else
+            vim.cmd('normal! "+p') -- en visuel, P et p font la même chose
+        end
     end
 end
 
 -- "x" (visuel seul) et non "v" : "v" inclut le mode sélection, utilisé par LuaSnip.
 -- <C-P> n'est pas utilisable : le terminal envoie le même code que <C-p>.
-map({ "n", "x" }, "<C-p>", smart_paste_below, { desc = "paste from clipboard below" })
-map({ "n", "x" }, "<leader>P", smart_paste_above, { desc = "paste from clipboard above" })
+map({ "n", "x" }, "<C-p>", clipboard_paste("p"), { desc = "paste from clipboard below" })
+map({ "n", "x" }, "<leader>P", clipboard_paste("P"), { desc = "paste from clipboard above" })
 
 -- Commentaires
 map("n", "<C-q>", "gcc", { desc = "toggle comment", remap = true })
