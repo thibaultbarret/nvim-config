@@ -25,7 +25,8 @@ return {
                         end
                     else
                         local fold_start = vim.fn.foldclosed(line)
-                        if fold_start ~= -1 and fold_start > vim.v.lnum then
+                        -- >= : un pli replié qui commence sur la ligne visée compte pour une ligne
+                        if fold_start ~= -1 and fold_start >= vim.v.lnum then
                             line = fold_start
                         end
                     end
@@ -62,6 +63,8 @@ return {
                     condition = { true },
                     click = "v:lua.ScLa",
                 },
+                -- Repères de pli ▾/▸ (fillchars dans plugins/fold.lua) ; clic : ouvrir/fermer
+                { text = { require("statuscol.builtin").foldfunc, " " }, click = "v:lua.ScFa" },
             },
             ft_ignore = { "neominimap", "NvimTree", "neo-tree", "toggleterm", "Trouble" },
             bt_ignore = { "nofile", "terminal" },

@@ -9,287 +9,30 @@ return {
         ----------------------------------------------------------------------
         -- Options générales
         ----------------------------------------------------------------------
-        vim.o.foldcolumn = "1"
+        vim.o.foldcolumn = "1" -- dessinée par le segment de pli de statuscol (plugins/statuscol.lua)
         vim.o.foldlevel = 99
         vim.o.foldlevelstart = 99
         vim.o.foldenable = true
-
-        -- ----------------------------------------------------------------------
-        -- ========================= PYTHON PROVIDERS ========================
-        ----------------------------------------------------------------------
-        -- Literal[] / Union[]
-        local function python_literal_provider(bufnr)
-            local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-            local folds, i = {}, 1
-
-            while i <= #lines do
-                local line = lines[i]
-                local kind = line:match("Literal%s*%[") and "literal" or line:match("Union%s*%[") and "union"
-
-                if kind then
-                    local start_line = i - 1
-                    local count, j = 0, i
-
-                    while j <= #lines do
-                        for c in lines[j]:gmatch("[%[%]]") do
-                            count = count + (c == "[" and 1 or -1)
-                        end
-                        if count == 0 and j > i then
-                            table.insert(folds, {
-                                startLine = start_line,
-                                endLine = j - 1,
-                                kind = kind,
-                            })
-                            i = j
-                            goto continue
-                        end
-                        j = j + 1
-                    end
-                end
-                ::continue::
-                i = i + 1
-            end
-            return folds
-        end
-
-        -- Class attributes
-        local function python_class_attributes_provider(bufnr)
-            local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-            local folds, i = {}, 1
-
-            while i <= #lines do
-                if lines[i]:match("^class%s+") then
-                    local base_indent
-                    local start, finish
-                    local j = i + 1
-
-                    while j <= #lines do
-                        local line = lines[j]
-
-                        if not (line:match("^%s*$") or line:match("^%s*#")) then
-                            local indent = #(line:match("^(%s*)") or "")
-                            base_indent = base_indent or indent
-
-                            if indent < base_indent then
-                                break
-                            end
-
-                            if indent == base_indent and line:match("^%s+[%w_]+%s*[:=]") then
-                                start = start or (j - 1)
-                                finish = j - 1
-                            elseif start then
-                                break
-                            end
-                        end
-
-                        j = j + 1
-                    end
-
-                    if start and finish and finish > start then
-                        table.insert(folds, {
-                            startLine = start,
-                            endLine = finish,
-                            kind = "attributes",
-                        })
-                    end
-
-                    i = j
-                else
-                    i = i + 1
-                end
-            end
-
-            return folds
-        end
-
-        -- @overload groups
-        local function python_overload_provider(bufnr)
-            local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-            local folds, i = {}, 1
-
-            while i <= #lines do
-                if lines[i]:match("^%s*@overload%s*$") then
-                    local start = i - 1
-                    local j = i + 1
-                    while j <= #lines and not lines[j]:match("^%s*def%s+") do
-                        j = j + 1
-                    end
-                    if j - 2 > start then
-                        table.insert(folds, {
-                            startLine = start,
-                            endLine = j - 2,
-                            kind = "overload",
-                        })
-                    end
-                    i = j
-                else
-                    i = i + 1
-                end
-            end
-            return folds
-        end
-
-        -- match / case
-        local function python_match_case_provider(bufnr)
-            local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-            local folds, i = {}, 1
-
-            while i <= #lines do
-                if lines[i]:match("^%s*match%s+") then
-                    local base_indent = #(lines[i]:match("^(%s*)") or "")
-                    local j = i + 1
-
-                    while j <= #lines do
-                        local indent = #(lines[j]:match("^(%s*)") or "")
-                        if indent <= base_indent then
-                            break
-                        end
-
-                        if lines[j]:match("^%s*case%s+") then
-                            local start = j - 1
-                            local k = j + 1
-                            while k <= #lines and #(lines[k]:match("^(%s*)") or "") > indent do
-                                k = k + 1
-                            end
-                            if k - 2 > start then
-                                table.insert(folds, {
-                                    startLine = start,
-                                    endLine = k - 2,
-                                    kind = "case",
-                                })
-                            end
-                            j = k
-                        else
-                            j = j + 1
-                        end
-                    end
-                    i = j
-                else
-                    i = i + 1
-                end
-            end
-            return folds
-        end
-
-        -- Imports
-        local function python_imports_provider(bufnr)
-            local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-            local folds = {}
-            local i = 1
-            local start = nil
-            local last_import = nil
-            local in_multiline_import = false
-
-            while i <= #lines do
-                local line = lines[i]
-
-                -- Détecte une ligne d'import
-                if line:match("^import%s+") or line:match("^from%s+.+%s+import") then
-                    if not start then
-                        start = i - 1
-                    end
-                    last_import = i - 1
-
-                    -- Vérifier si c'est un import multi-ligne
-                    local open_parens = select(2, line:gsub("%(", ""))
-                    local close_parens = select(2, line:gsub("%)", ""))
-                    if open_parens > close_parens then
-                        in_multiline_import = true
-                    end
-                -- Si on est dans un import multi-ligne, continuer
-                elseif in_multiline_import then
-                    last_import = i - 1
-                    local open_parens = select(2, line:gsub("%(", ""))
-                    local close_parens = select(2, line:gsub("%)", ""))
-                    if close_parens > 0 then
-                        in_multiline_import = false
-                    end
-                -- Autoriser les lignes vides et commentaires entre les imports
-                elseif start and (line:match("^%s*$") or line:match("^%s*#")) then
-                -- Ne rien faire, on continue
-                -- Dès qu'on trouve une ligne avec du code, on ferme le fold
-                elseif start and last_import then
-                    -- On ferme le fold jusqu'à la dernière ligne d'import
-                    if last_import > start then
-                        table.insert(folds, {
-                            startLine = start,
-                            endLine = last_import,
-                            kind = "imports",
-                        })
-                    end
-                    start = nil
-                    last_import = nil
-                end
-
-                i = i + 1
-            end
-
-            -- Cas où les imports vont jusqu'à la fin du fichier
-            if start and last_import and last_import > start then
-                table.insert(folds, {
-                    startLine = start,
-                    endLine = last_import,
-                    kind = "imports",
-                })
-            end
-
-            return folds
-        end
-
-        -- Docstring
-        local function python_module_docstring_provider(bufnr)
-            local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-            local folds = {}
-            local i = 1
-
-            -- Sauter les commentaires et lignes vides au début
-            while i <= #lines and (lines[i]:match("^%s*$") or lines[i]:match("^%s*#")) do
-                i = i + 1
-            end
-
-            -- Chercher une docstring multiline avec """ ou '''
-            if i <= #lines then
-                local line = lines[i]
-                -- Correction : capturer le quote, puis utiliser %1 en dehors de la capture
-                local quote = line:match("^%s*([\"'])%1%1") -- """ ou '''
-
-                if quote then
-                    local start = i - 1
-                    local full_quote = quote:rep(3) -- Reconstituer """ ou '''
-
-                    -- Si le closing est sur la même ligne, on ignore
-                    local _, count = line:gsub(vim.pesc(full_quote), "")
-                    if count >= 2 then
-                        return folds
-                    end
-
-                    -- Chercher la fermeture
-                    local j = i + 1
-                    while j <= #lines do
-                        if lines[j]:match(vim.pesc(full_quote)) then
-                            -- On crée un fold seulement si on a au moins 3 lignes
-                            if j - 1 > start + 1 then
-                                table.insert(folds, {
-                                    startLine = start,
-                                    endLine = j - 1,
-                                    kind = "docstring",
-                                })
-                            end
-                            break
-                        end
-                        j = j + 1
-                    end
-                end
-            end
-
-            return folds
-        end
+        -- Marge : ▾ pli ouvert, ▸ pli replié, rien sur les lignes intérieures
+        vim.opt.fillchars:append({ foldopen = "▾", foldclose = "▸", foldsep = " " })
 
         ----------------------------------------------------------------------
         -- ========================== LATEX PROVIDERS =========================
         ----------------------------------------------------------------------
+        -- Partie de la ligne avant le commentaire. Un % ouvre un commentaire s'il suit un nombre
+        -- pair de \ : \% est un pourcentage, \\% un saut de ligne suivi d'un commentaire.
         local function strip_comment(line)
-            return line:gsub("%%.*$", "")
+            local init = 1
+            while true do
+                local pos = line:find("%", init, true)
+                if not pos then
+                    return line
+                end
+                if #line:sub(1, pos - 1):match("\\*$") % 2 == 0 then
+                    return line:sub(1, pos - 1)
+                end
+                init = pos + 1
+            end
         end
 
         -- Les motifs Lua n'ont pas d'alternance `|` : on capture le nom de la
@@ -344,6 +87,7 @@ return {
             end
             return folds
         end
+
         -- Préambule : entre \documentclass et \begin{document}
         local function tex_preamble_provider(bufnr)
             local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
@@ -365,91 +109,6 @@ return {
                 end
             end
 
-            return folds
-        end
-
-        -- Environnements + sections
-        local function tex_env_provider(bufnr)
-            local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-            local folds, i = {}, 1
-
-            while i <= #lines do
-                local line = strip_comment(lines[i])
-
-                local env = line:match("\\begin%s*{([^}]+)}")
-                if env then
-                    local start = i - 1
-                    local j = i + 1
-                    local end_pat = "\\end%s*{" .. vim.pesc(env) .. "}"
-
-                    while j <= #lines do
-                        if strip_comment(lines[j]):match(end_pat) then
-                            table.insert(folds, {
-                                startLine = start,
-                                endLine = j - 1,
-                                kind = "environment",
-                            })
-                            i = j
-                            goto cont
-                        end
-                        j = j + 1
-                    end
-                end
-
-                if is_sectioning(line) then
-                    local start = i - 1
-                    local j = i + 1
-                    while j <= #lines do
-                        local l = strip_comment(lines[j])
-                        if is_sectioning(l) or l:match("\\end%s*{") then
-                            break
-                        end
-                        j = j + 1
-                    end
-                    if j - 2 > start then
-                        table.insert(folds, {
-                            startLine = start,
-                            endLine = j - 2,
-                            kind = "section",
-                        })
-                        i = j - 1
-                    end
-                end
-                ::cont::
-                i = i + 1
-            end
-            return folds
-        end
-
-        -- TikZ \foreach { ... }
-        local function tex_foreach_provider(bufnr)
-            local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-            local folds, i = {}, 1
-
-            while i <= #lines do
-                local line = strip_comment(lines[i])
-                if line:match("^%s*\\foreach%s+.+{%s*$") then
-                    local start = i - 1
-                    local depth, j = 0, i
-                    while j <= #lines do
-                        for c in strip_comment(lines[j]):gmatch("[{}]") do
-                            depth = depth + (c == "{" and 1 or -1)
-                        end
-                        if depth == 0 and j > i then
-                            table.insert(folds, {
-                                startLine = start,
-                                endLine = j - 1,
-                                kind = "foreach",
-                            })
-                            i = j
-                            goto cont
-                        end
-                        j = j + 1
-                    end
-                end
-                ::cont::
-                i = i + 1
-            end
             return folds
         end
 
@@ -533,110 +192,63 @@ return {
             return folds
         end
 
-        -- Accolades multi-lignes en LaTeX (avec support des folds imbriqués)
+        -- Accolades sur au moins 3 lignes, imbriquées comprises (\foreach {…} inclus) : une passe,
+        -- une pile des lignes d'ouverture. \{ et \} sont littérales ; \\ (saut de ligne) retiré d'abord
+        -- pour que \\{ garde son accolade.
         local function tex_braces_provider(bufnr)
             local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-            local folds = {}
+            local folds, open_rows = {}, {}
 
-            -- Fonction récursive pour trouver tous les folds d'accolades
-            local function find_brace_folds(start_idx, end_idx)
-                local i = start_idx
-
-                while i <= end_idx do
-                    local line = strip_comment(lines[i])
-
-                    -- Cherche des accolades ouvrantes
-                    local pos = 1
-                    while pos <= #line do
-                        local brace_pos = line:find("{", pos, true)
-                        if not brace_pos then
-                            break
+            for row, raw in ipairs(lines) do
+                local line = strip_comment(raw):gsub("\\\\", ""):gsub("\\[{}]", "")
+                for brace in line:gmatch("[{}]") do
+                    if brace == "{" then
+                        open_rows[#open_rows + 1] = row
+                    elseif #open_rows > 0 then
+                        local start = table.remove(open_rows)
+                        if row > start + 1 then
+                            folds[#folds + 1] = { startLine = start - 1, endLine = row - 1, kind = "braces" }
                         end
-
-                        -- Trouve l'accolade fermante correspondante
-                        local depth = 0
-                        local j = i
-                        local char_pos = brace_pos
-
-                        while j <= end_idx do
-                            local current_line = strip_comment(lines[j])
-                            local start_pos = (j == i) and char_pos or 1
-
-                            for k = start_pos, #current_line do
-                                local c = current_line:sub(k, k)
-                                if c == "{" then
-                                    depth = depth + 1
-                                elseif c == "}" then
-                                    depth = depth - 1
-                                    if depth == 0 then
-                                        -- Trouvé l'accolade fermante correspondante
-                                        -- Créer un fold seulement si ça fait au moins 3 lignes
-                                        if j > i + 1 then
-                                            table.insert(folds, {
-                                                startLine = i - 1,
-                                                endLine = j - 1,
-                                                kind = "braces",
-                                            })
-
-                                            -- Chercher récursivement des folds imbriqués
-                                            find_brace_folds(i + 1, j - 1)
-                                        end
-                                        goto next_brace
-                                    end
-                                end
-                            end
-                            j = j + 1
-                        end
-
-                        ::next_brace::
-                        pos = brace_pos + 1
                     end
-
-                    i = i + 1
                 end
             end
 
-            find_brace_folds(1, #lines)
             return folds
         end
+
+        -- Chaque plage une seule fois : ufo ne retire que les doublons consécutifs, et deux plis
+        -- identiques deviennent deux plis emboîtés (il faut alors deux zo pour ouvrir).
+        local function unique_ranges(folds)
+            local seen, unique = {}, {}
+            for _, fold in ipairs(folds) do
+                local key = fold.startLine .. ":" .. fold.endLine
+                if not seen[key] then
+                    seen[key] = true
+                    unique[#unique + 1] = fold
+                end
+            end
+            return unique
+        end
+
+        local TEX_PROVIDERS = {
+            tex_preamble_provider,
+            tex_addplot_provider,
+            tex_bracket_args_provider,
+            tex_braces_provider,
+        }
 
         ----------------------------------------------------------------------
         -- PROVIDER SELECTOR
         ----------------------------------------------------------------------
-        local function provider_selector(bufnr, filetype)
-            if filetype == "python" then
+        -- LaTeX : treesitter (environnements, sections) + plis maison ; ailleurs, treesitter puis indentation
+        local function provider_selector(_, filetype)
+            if filetype == "tex" or filetype == "latex" then
                 return function(bufnr)
-                    local ts = require("ufo.provider.treesitter").getFolds(bufnr) or {}
-                    return vim.list_extend(
-                        ts,
-                        vim.list_extend(
-                            python_imports_provider(bufnr),
-                            vim.list_extend(
-                                python_module_docstring_provider(bufnr),
-                                vim.list_extend(
-                                    python_literal_provider(bufnr),
-                                    vim.list_extend(
-                                        python_class_attributes_provider(bufnr),
-                                        vim.list_extend(
-                                            python_overload_provider(bufnr),
-                                            python_match_case_provider(bufnr)
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    )
-                end
-            elseif filetype == "tex" or filetype == "latex" then
-                return function(bufnr)
-                    local ts = require("ufo.provider.treesitter").getFolds(bufnr) or {}
-                    -- vim.list_extend(ts, tex_env_provider(bufnr))
-                    vim.list_extend(ts, tex_preamble_provider(bufnr))
-                    vim.list_extend(ts, tex_foreach_provider(bufnr))
-                    vim.list_extend(ts, tex_addplot_provider(bufnr))
-                    vim.list_extend(ts, tex_bracket_args_provider(bufnr))
-                    vim.list_extend(ts, tex_braces_provider(bufnr))
-                    return ts
+                    local folds = require("ufo.provider.treesitter").getFolds(bufnr) or {}
+                    for _, provider in ipairs(TEX_PROVIDERS) do
+                        vim.list_extend(folds, provider(bufnr))
+                    end
+                    return unique_ranges(folds)
                 end
             end
             return { "treesitter", "indent" }
@@ -645,80 +257,32 @@ return {
         ----------------------------------------------------------------------
         -- UFO SETUP
         ----------------------------------------------------------------------
+        -- Icône et couleur du résumé d'un pli LaTeX, d'après sa ligne d'en-tête (sans commentaire)
+        local function tex_fold_icon(line)
+            if line:match("\\begin%s*{") then
+                return " 󰙅 ", "Function"
+            elseif is_sectioning(line) then
+                return " 󰉫 ", "Title"
+            elseif line:match("\\documentclass") then -- avant les accolades/crochets qui le captureraient
+                return " 󰈙 ", "PreProc"
+            elseif line:match("{[^}]*$") then -- accolade ouverte non refermée sur la ligne
+                return " 󰅲 ", "Delimiter"
+            elseif line:match("%[[^%]]*$") then -- crochet ouvert non refermé sur la ligne
+                return " 󰘨 ", "Special"
+            end
+            return " 󰁂 ", "MoreMsg"
+        end
+
         require("ufo").setup({
             provider_selector = provider_selector,
-            -- provider_selector = enhanced_provider_selector,
 
-            -- Configuration des icônes de fold avec indication du type
-            fold_virt_text_handler = function(virtText, lnum, endLnum, width, truncate)
+            -- ctx.text : ligne d'en-tête du pli, prise dans le buffer du pli (lnum commence à 1)
+            fold_virt_text_handler = function(virtText, lnum, endLnum, width, truncate, ctx)
                 local newVirtText = {}
-
-                -- Détecte le type de fold pour personnaliser l'affichage
-                local line_text = vim.api.nvim_buf_get_lines(0, lnum, lnum + 1, false)[1] or ""
-                local icon = " 󰁂 "
-                local highlight = "MoreMsg"
-
-                --
-                -- Python - Imports
-                if line_text:match("^import%s+") or line_text:match("^from%s+") then
-                    icon = "  "
-                    highlight = "Include"
-                --
-                -- Python - Docstring de module
-                elseif line_text:match('^%s*"""') or line_text:match("^%s*'''") then
-                    icon = " 󰷉 "
-                    highlight = "String"
-
-                --
-                -- Python - @overload
-                elseif line_text:match("^%s*@overload") then
-                    icon = " 󰡱 "
-                    highlight = "Special"
-                --
-                -- Python - case dans match
-                elseif line_text:match("^%s*case%s+") then
-                    icon = " 󰃽 "
-                    highlight = "Conditional"
-                --
-                -- Python - Union[]
-                elseif line_text:match("Union%s*%[") then
-                    icon = " 󰆧 "
-                    highlight = "Type"
-                --
-                -- Python - Literal[]
-                elseif line_text:match("Literal%s*%[") then
-                    icon = " 󰅩 "
-                    highlight = "Type"
-                --
-                -- Python - Attributs de classe
-                elseif line_text:match("^%s+[%w_]+%s*:") or line_text:match("^%s+[%w_]+%s*=") then
-                    icon = " 󰜢 "
-                    highlight = "Identifier"
-                --
-                -- LaTeX - Environnements
-                elseif line_text:match("\\begin%s*{") then
-                    icon = " 󰙅 "
-                    highlight = "Function"
-                --
-                -- LaTeX - Sections
-                elseif is_sectioning(line_text) then
-                    icon = " 󰉫 "
-                    highlight = "Title"
-                --
-                -- LaTeX - Préambule (avant les accolades/crochets qui le captureraient)
-                elseif line_text:match("\\documentclass") then
-                    icon = " 󰈙 "
-                    highlight = "PreProc"
-                --
-                -- LaTeX - Accolades génériques
-                elseif line_text:match("{%s*$") then
-                    icon = " 󰅲 "
-                    highlight = "Delimiter"
-                --
-                -- LaTeX - Crochets
-                elseif line_text:match("%[") then
-                    icon = " 󰘨 "
-                    highlight = "Special"
+                local filetype = vim.bo[ctx.bufnr].filetype
+                local icon, highlight = " 󰁂 ", "MoreMsg"
+                if filetype == "tex" or filetype == "latex" then
+                    icon, highlight = tex_fold_icon(strip_comment(ctx.text))
                 end
 
                 local suffix = (icon .. "%d "):format(endLnum - lnum)
@@ -767,16 +331,24 @@ return {
             ft_ignore = { "TelescopePrompt", "alpha", "dashboard" },
         })
 
-        -- Closing all folds initially but only once per buffer
+        -- Première ouverture d'un .tex : tout replier, puis rouvrir \begin{document} et les tikzpicture.
+        -- Les délais laissent ufo calculer les plis ; tout se fait dans la fenêtre d'origine, même si
+        -- on a changé de fenêtre entre-temps (abandonné si elle n'affiche plus ce buffer).
         vim.api.nvim_create_autocmd("BufWinEnter", {
             pattern = "*.tex",
             callback = function(args)
-                if not vim.b[args.buf].initial_fold_done then
-                    vim.defer_fn(function()
-                        if not vim.api.nvim_buf_is_valid(args.buf) then
-                            return
-                        end
+                if vim.b[args.buf].initial_fold_done then
+                    return
+                end
+                local win = vim.api.nvim_get_current_win()
+                local function in_origin_window(fn)
+                    if vim.api.nvim_win_is_valid(win) and vim.api.nvim_win_get_buf(win) == args.buf then
+                        vim.api.nvim_win_call(win, fn)
+                    end
+                end
 
+                vim.defer_fn(function()
+                    in_origin_window(function()
                         local lines = vim.api.nvim_buf_get_lines(args.buf, 0, -1, false)
                         local tikz_start, tikz_end, count = nil, nil, 0
                         for i, line in ipairs(lines) do
@@ -795,29 +367,31 @@ return {
                             vim.cmd("normal! zv")
                         else
                             vim.defer_fn(function()
-                                local pos = vim.api.nvim_win_get_cursor(0)
+                                in_origin_window(function()
+                                    local pos = vim.api.nvim_win_get_cursor(0)
 
-                                -- Ouvrir \begin{document}
-                                vim.api.nvim_win_set_cursor(0, { 1, 0 })
-                                local doc_line = vim.fn.search([[\\begin{document}]], "w")
-                                if doc_line > 0 then
-                                    vim.api.nvim_win_set_cursor(0, { doc_line, 0 })
-                                    vim.cmd("normal! zv") -- zv au lieu de zo
-                                end
+                                    -- Ouvrir \begin{document}
+                                    vim.api.nvim_win_set_cursor(0, { 1, 0 })
+                                    local doc_line = vim.fn.search([[\\begin{document}]], "w")
+                                    if doc_line > 0 then
+                                        vim.api.nvim_win_set_cursor(0, { doc_line, 0 })
+                                        vim.cmd("normal! zv") -- zv au lieu de zo
+                                    end
 
-                                -- Ouvrir tous les \begin{tikzpicture}
-                                vim.api.nvim_win_set_cursor(0, { 1, 0 })
-                                while vim.fn.search([[\\begin{tikzpicture}]], "W") > 0 do
-                                    vim.cmd("normal! zv")
-                                end
+                                    -- Ouvrir tous les \begin{tikzpicture}
+                                    vim.api.nvim_win_set_cursor(0, { 1, 0 })
+                                    while vim.fn.search([[\\begin{tikzpicture}]], "W") > 0 do
+                                        vim.cmd("normal! zv")
+                                    end
 
-                                vim.api.nvim_win_set_cursor(0, pos)
+                                    vim.api.nvim_win_set_cursor(0, pos)
+                                end)
                             end, 500) -- Délai plus long
                         end
 
                         vim.b[args.buf].initial_fold_done = true
-                    end, 500)
-                end
+                    end)
+                end, 500)
             end,
         })
         ----------------------------------------------------------------------
