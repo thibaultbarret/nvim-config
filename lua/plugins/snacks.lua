@@ -48,6 +48,12 @@ return {
         terminal = {
             win = { position = "bottom", height = TERMINAL_HEIGHT },
         },
+        -- Picker (utilisé par papis). L'aperçu n'est pas une fenêtre minimale : il hérite
+        -- de cursorcolumn (core/options.lua) et des « ~ » de fin de buffer.
+        picker = {
+            ui_select = false, -- déclarer picker l'active : garder le vim.ui.select natif
+            win = { preview = { wo = { cursorcolumn = false, fillchars = "fold: ,eob: " } } },
+        },
         input = {
             enabled = true,
             -- options propres à input (valeurs par défaut, à ajuster)
