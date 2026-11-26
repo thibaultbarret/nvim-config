@@ -35,6 +35,7 @@ local SOURCE_NAMES = {
     nvim_lsp = "[LSP]",
     buffer = "[Buf]",
     path = "[Path]",
+    papis_categories = "[Papis]",
 }
 
 local function truncate(text, max_width)
@@ -175,6 +176,7 @@ return {
                             or keep_python_member(entry.completion_item.label, ctx.cursor_before_line)
                     end,
                 },
+                { name = "papis_categories", priority = 950 }, -- info.yaml seulement (lua/plugins/papis.lua)
                 { name = "luasnip", priority = 900, option = { show_autosnippets = true } },
                 {
                     name = "buffer",
